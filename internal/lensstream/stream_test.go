@@ -325,18 +325,6 @@ func writeRaw(ctx context.Context, conn *websocket.Conn, data []byte) error {
 	return nil
 }
 
-func waitForConnections(t *testing.T, connections *atomic.Int32, want int32) {
-	t.Helper()
-	deadline := time.After(time.Second)
-	for connections.Load() < want {
-		select {
-		case <-deadline:
-			t.Fatalf("connections = %d, want at least %d", connections.Load(), want)
-		case <-time.After(time.Millisecond):
-		}
-	}
-}
-
 func waitForMetric(t *testing.T, recorder *telemetrytest.Recorder, name string) {
 	t.Helper()
 	deadline := time.After(time.Second)
