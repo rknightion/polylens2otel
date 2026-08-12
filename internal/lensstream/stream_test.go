@@ -17,6 +17,7 @@ import (
 	"github.com/coder/websocket"
 
 	"github.com/rknightion/polylens2otel/internal/semconv"
+	"github.com/rknightion/polylens2otel/internal/telemetry"
 	"github.com/rknightion/polylens2otel/internal/telemetrytest"
 )
 
@@ -97,8 +98,9 @@ func TestRunNamedSubscriptionEmitsDeviceAndSelfObservation(t *testing.T) {
 
 func TestRunReconnectsAfterConnectionCloses(t *testing.T) {
 	var connections atomic.Int32
+	secondSubscribed := make(chan struct{}, 1)
 	server := websocketServer(t, func(ctx context.Context, _ *http.Request, conn *websocket.Conn) error {
-		connections.Add(1)
+		connection := connections.Add(1)
 		if _, err := readFrame(ctx, conn); err != nil {
 			return err
 		}
@@ -107,6 +109,11 @@ func TestRunReconnectsAfterConnectionCloses(t *testing.T) {
 		}
 		if _, err := readFrame(ctx, conn); err != nil {
 			return err
+		}
+		if connection == 2 {
+			secondSubscribed <- struct{}{}
+			<-ctx.Done()
+			return nil
 		}
 		_ = conn.Close(websocket.StatusNormalClosure, "test reconnect")
 		return nil
@@ -117,7 +124,11 @@ func TestRunReconnectsAfterConnectionCloses(t *testing.T) {
 	go func() {
 		done <- New(Config{URL: server.URL, Token: "test-token", DeviceIDs: []string{"1"}, AckTimeout: 20 * time.Millisecond, MinBackoff: time.Millisecond, MaxBackoff: 2 * time.Millisecond, Emitter: recorder.Emitter()}).Run(ctx)
 	}()
-	waitForConnections(t, &connections, 2)
+	select {
+	case <-secondSubscribed:
+	case <-time.After(time.Second):
+		t.Fatal("server did not receive the second subscription")
+	}
 	cancel()
 	err := <-done
 	if err != nil {
@@ -131,12 +142,54 @@ func TestRunReconnectsAfterConnectionCloses(t *testing.T) {
 	}
 }
 
-func TestRunReconnectsWhenAckTimesOut(t *testing.T) {
-	var connections atomic.Int32
+func TestRunReconnectsReturnsNilWhenCancelledDuringReconnectEmission(t *testing.T) {
 	server := websocketServer(t, func(ctx context.Context, _ *http.Request, conn *websocket.Conn) error {
-		connections.Add(1)
 		if _, err := readFrame(ctx, conn); err != nil {
 			return err
+		}
+		if err := writeFrame(ctx, conn, frame{Type: connectionAck}); err != nil {
+			return err
+		}
+		if _, err := readFrame(ctx, conn); err != nil {
+			return err
+		}
+		_ = conn.Close(websocket.StatusNormalClosure, "test reconnect")
+		return nil
+	})
+
+	ctx, cancel := context.WithCancel(context.Background())
+	t.Cleanup(cancel)
+	emitter := &cancelDuringReconnectEmitter{
+		Emitter:      telemetrytest.New().Emitter(),
+		reconnecting: make(chan struct{}, 1),
+	}
+	done := make(chan error, 1)
+	go func() {
+		done <- New(Config{URL: server.URL, Token: "test-token", DeviceIDs: []string{"1"}, AckTimeout: 20 * time.Millisecond, MinBackoff: time.Millisecond, MaxBackoff: 2 * time.Millisecond, Emitter: emitter}).Run(ctx)
+	}()
+
+	select {
+	case <-emitter.reconnecting:
+	case <-time.After(time.Second):
+		t.Fatal("Run did not begin reconnect accounting")
+	}
+	cancel()
+
+	if err := <-done; err != nil {
+		t.Fatalf("Run() error = %v, want nil after cancellation", err)
+	}
+}
+
+func TestRunReconnectsWhenAckTimesOut(t *testing.T) {
+	var connections atomic.Int32
+	secondInitReceived := make(chan struct{}, 1)
+	server := websocketServer(t, func(ctx context.Context, _ *http.Request, conn *websocket.Conn) error {
+		connection := connections.Add(1)
+		if _, err := readFrame(ctx, conn); err != nil {
+			return err
+		}
+		if connection == 2 {
+			secondInitReceived <- struct{}{}
 		}
 		<-ctx.Done()
 		return nil
@@ -147,7 +200,11 @@ func TestRunReconnectsWhenAckTimesOut(t *testing.T) {
 	go func() {
 		done <- New(Config{URL: server.URL, Token: "test-token", DeviceIDs: []string{"1"}, AckTimeout: 5 * time.Millisecond, MinBackoff: time.Millisecond, MaxBackoff: 2 * time.Millisecond, Emitter: recorder.Emitter()}).Run(ctx)
 	}()
-	waitForConnections(t, &connections, 2)
+	select {
+	case <-secondInitReceived:
+	case <-time.After(time.Second):
+		t.Fatal("server did not receive the second connection_init")
+	}
 	cancel()
 	err := <-done
 	if err != nil {
@@ -156,6 +213,20 @@ func TestRunReconnectsWhenAckTimesOut(t *testing.T) {
 	if connections.Load() < 2 {
 		t.Fatalf("connections = %d, want acknowledgement timeout to reconnect", connections.Load())
 	}
+}
+
+type cancelDuringReconnectEmitter struct {
+	telemetry.Emitter
+	reconnecting chan struct{}
+}
+
+func (e *cancelDuringReconnectEmitter) Counter(ctx context.Context, name string, value float64, attrs ...telemetry.Attr) error {
+	if name != semconv.MetricStreamReconnects {
+		return e.Emitter.Counter(ctx, name, value, attrs...)
+	}
+	e.reconnecting <- struct{}{}
+	<-ctx.Done()
+	return errors.New("reconnect telemetry transport failed")
 }
 
 func TestRunDoesNotTreatMessageSilenceAsFailure(t *testing.T) {

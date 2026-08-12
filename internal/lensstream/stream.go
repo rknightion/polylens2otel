@@ -66,6 +66,9 @@ func (s *Stream) Run(ctx context.Context) error {
 	for failures := 0; ; failures++ {
 		if failures > 0 {
 			if err := s.cfg.Emitter.Counter(ctx, semconv.MetricStreamReconnects, 1); err != nil {
+				if ctx.Err() != nil {
+					return nil
+				}
 				return fmt.Errorf("emit stream reconnect: %w", err)
 			}
 			if err := sleepContext(ctx, s.backoff(failures)); err != nil {
