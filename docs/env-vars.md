@@ -11,8 +11,10 @@ Configuration precedence is defaults, YAML, then `PL2O_` environment variables. 
 | `collectors.lens_cdr` | `duration` | `1h0m0s` | `PL2O_COLLECTORS__LENS_CDR` | No | Optional | Polling interval for Lens CDR logs. |
 | `collectors.lens_devices` | `duration` | `1m0s` | `PL2O_COLLECTORS__LENS_DEVICES` | No | Optional | Polling interval for Lens device inventory. |
 | `collectors.lens_firmware` | `duration` | `24h0m0s` | `PL2O_COLLECTORS__LENS_FIRMWARE` | No | Optional | Polling interval for Lens firmware inventory. |
+| `collectors.phone_call_logs` | `duration` | `5m0s` | `PL2O_COLLECTORS__PHONE_CALL_LOGS` | No | Optional | Polling interval for phone call logs. |
 | `collectors.phone_config` | `duration` | `5m0s` | `PL2O_COLLECTORS__PHONE_CONFIG` | No | Optional | Polling interval for phone configuration. |
 | `collectors.phone_lines` | `duration` | `1m0s` | `PL2O_COLLECTORS__PHONE_LINES` | No | Optional | Polling interval for phone lines. |
+| `collectors.phone_network_info` | `duration` | `5m0s` | `PL2O_COLLECTORS__PHONE_NETWORK_INFO` | No | Optional | Polling interval for phone network information. |
 | `collectors.phone_status` | `duration` | `1m0s` | `PL2O_COLLECTORS__PHONE_STATUS` | No | Optional | Polling interval for phone status. |
 | `collectors.selfobs_internal` | `duration` | `1m0s` | `PL2O_COLLECTORS__SELFOBS_INTERNAL` | No | Optional | Emission interval for exporter self-observability. |
 | `lens.client_id` | `string` | `` | `PL2O_LENS__CLIENT_ID` | No | Required | OAuth client identifier. |

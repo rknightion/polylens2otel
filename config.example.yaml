@@ -74,6 +74,10 @@ collectors:
   phone_lines: 1m0s
   # Polling interval for phone configuration.
   phone_config: 5m0s
+  # Polling interval for phone call logs.
+  phone_call_logs: 5m0s
+  # Polling interval for phone network information.
+  phone_network_info: 5m0s
   # Emission interval for exporter self-observability.
   selfobs_internal: 1m0s
 otlp:

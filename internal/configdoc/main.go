@@ -72,6 +72,8 @@ var comments = map[string]string{
 	"collectors.phone_status":                 "Polling interval for phone status.",
 	"collectors.phone_lines":                  "Polling interval for phone lines.",
 	"collectors.phone_config":                 "Polling interval for phone configuration.",
+	"collectors.phone_call_logs":              "Polling interval for phone call logs.",
+	"collectors.phone_network_info":           "Polling interval for phone network information.",
 	"collectors.selfobs_internal":             "Emission interval for exporter self-observability.",
 	"otlp.endpoint":                           "OTLP collector endpoint.",
 	"otlp.protocol":                           "OTLP transport protocol; validation permits http or grpc.",
