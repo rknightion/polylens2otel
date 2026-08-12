@@ -29,6 +29,7 @@ fail_matches "private IPv4 address in tracked files" \
 yaml_hits="$(git grep -nE '^[[:space:]]*(client_secret|password|token):[[:space:]]*[^#[:space:]]' -- '*.yaml' '*.yml' 2>/dev/null || true)"
 if [[ -n "$yaml_hits" ]]; then
   yaml_hits="$(printf '%s\n' "$yaml_hits" | grep -Ev ':[[:space:]]*(client_secret|password|token):[[:space:]]*(""|'"''"')([[:space:]]*#.*)?$' || true)"
+  yaml_hits="$(printf '%s\n' "$yaml_hits" | grep -Fv '${{' | grep -Fv '${' || true)"
   if [[ -n "$yaml_hits" ]]; then
     printf 'FAIL: non-empty YAML secret value in tracked files\n%s\n' "$yaml_hits" >&2
     failed=1

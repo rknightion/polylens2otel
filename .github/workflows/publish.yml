@@ -1,0 +1,37 @@
+name: publish
+
+# Called by release-please.yml. Empty release_tag publishes the edge :main image;
+# a release tag publishes the immutable release image and Helm chart. There is no
+# push trigger: release-please gates exactly one of the release and edge callers.
+on:
+  workflow_call:
+    inputs:
+      release_tag:
+        description: "Release tag to publish, e.g. v1.2.3; empty publishes edge"
+        required: false
+        type: string
+        default: ""
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: "Release tag (vX.Y.Z); empty publishes edge (:main)"
+        required: false
+        type: string
+        default: ""
+
+permissions:
+  contents: read
+
+jobs:
+  image:
+    permissions:
+      contents: write
+      packages: write
+      id-token: write
+      attestations: write
+      security-events: write
+    uses: rknightion/.github/.github/workflows/container-publish.yml@65aedb61754e9bf31e947c17409256ba0c58c637 # v1.4.3
+    with:
+      release-tag: ${{ inputs.release_tag }}
+      dockerfile: Dockerfile
+      helm-chart-path: charts/polylens2otel

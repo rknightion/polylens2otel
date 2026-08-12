@@ -1,0 +1,54 @@
+name: Helm
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "charts/**"
+      - ".github/workflows/helm.yml"
+  # This required check must report for every PR; path filters here would leave
+  # unrelated PRs blocked waiting for a check that was never created.
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: helm-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CHART_DIR: charts/polylens2otel
+
+jobs:
+  lint-template:
+    name: helm lint + template
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+        with:
+          persist-credentials: false
+      - name: Set up Helm
+        uses: azure/setup-helm@9bc31f4ebc9c6b171d7bfbaa5d006ae7abdb4310 # v5.0.1
+      - name: helm lint
+        run: helm lint "$CHART_DIR"
+      - name: helm template
+        run: helm template polylens2otel "$CHART_DIR" > /dev/null
+      - name: helm-docs README is in sync
+        run: |
+          make helm-docs
+          git diff --exit-code "$CHART_DIR/README.md"
+
+  helm-success:
+    name: helm-success
+    runs-on: ubuntu-latest
+    if: always()
+    needs: [lint-template]
+    steps:
+      - name: Fail if the required job did not pass
+        if: ${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') }}
+        run: |
+          echo "A required job failed or was cancelled: ${{ join(needs.*.result, ', ') }}"
+          exit 1
+      - name: All required jobs passed
+        run: echo "helm-success — ${{ join(needs.*.result, ', ') }}"
