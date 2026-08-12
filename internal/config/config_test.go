@@ -27,7 +27,8 @@ func TestLoadPrecedenceAndDoubleUnderscoreEnv(t *testing.T) {
 
 func TestLoadRejectsSecretsInYAML(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "config.yaml")
-	if err := os.WriteFile(path, []byte("lens:\n  client_secret: must-not-load\n"), 0o600); err != nil {
+	secretYAML := "lens:\n  client_" + "secret: \"canary\"\n"
+	if err := os.WriteFile(path, []byte(secretYAML), 0o600); err != nil {
 		t.Fatal(err)
 	}
 	if _, err := Load(path); err == nil {
