@@ -3,6 +3,7 @@ package config
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 )
@@ -67,5 +68,32 @@ func TestValidateRequiresPhoneOverrideSafetyFields(t *testing.T) {
 	cfg.Phone.Targets = map[string]string{"device": "phone.example"}
 	if err := cfg.Validate(); err != nil {
 		t.Fatal(err)
+	}
+}
+
+func TestValidateAllowsStaticPhoneDeploymentWithoutLensCredentials(t *testing.T) {
+	cfg := Default()
+	cfg.OTLP.Endpoint = "https://example.com/otlp"
+	cfg.OTLP.GrafanaCloud.InstanceID = "1"
+	cfg.OTLP.GrafanaCloud.Token = "token"
+	cfg.Phone.Auth.Password = "password"
+	cfg.Phone.Targets = map[string]string{"482567000001": "phone.example"}
+
+	if err := cfg.Validate(); err != nil {
+		t.Fatalf("Validate() error = %v; want static phone-only deployment accepted", err)
+	}
+}
+
+func TestValidateRejectsUnverifiableStaticPhoneIdentityWithoutLensCredentials(t *testing.T) {
+	cfg := Default()
+	cfg.OTLP.Endpoint = "https://example.com/otlp"
+	cfg.OTLP.GrafanaCloud.InstanceID = "1"
+	cfg.OTLP.GrafanaCloud.Token = "token"
+	cfg.Phone.Auth.Password = "password"
+	cfg.Phone.Targets = map[string]string{"device-alias": "phone.example"}
+
+	err := cfg.Validate()
+	if err == nil || !strings.Contains(err.Error(), "12-hex-digit MAC") {
+		t.Fatalf("Validate() error = %v; want static target identity error", err)
 	}
 }

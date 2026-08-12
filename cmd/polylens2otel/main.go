@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"sort"
 	"strings"
 	"sync"
 	"syscall"
@@ -98,41 +99,55 @@ func run(ctx context.Context, args []string, stdout, stderr io.Writer) int {
 		}()
 	}
 
-	lensTransport := telemetry.InstrumentHTTPTransport(http.DefaultTransport.(*http.Transport).Clone(), runtimeEmitter, "lens")
-	lensHTTP := &http.Client{Transport: lensTransport, Timeout: cfg.Lens.RequestTimeout}
-	lens, err := lensclient.New(lensclient.Config{
-		TokenURL: cfg.Lens.TokenURL, GraphQLURL: cfg.Lens.GraphQLURL,
-		ClientID: cfg.Lens.ClientID, ClientSecret: cfg.Lens.ClientSecret,
-		PageSize: cfg.Lens.PageSize, MaxAttempts: cfg.Lens.Retry.MaxAttempts,
-		MinBackoff: cfg.Lens.Retry.MinBackoff, MaxBackoff: cfg.Lens.Retry.MaxBackoff,
-		HTTPClient: lensHTTP, Emitter: runtimeEmitter,
-	})
-	if err != nil {
-		logger.Error("build Lens client", "error", err)
-		return 1
-	}
-
-	tenantIDs, devices, err := discoverDevices(ctx, lens, cfg.Lens.Tenants)
-	if err != nil {
-		logger.Error("discover Lens devices", "error", err)
-		return 1
+	var lens *lensclient.Client
+	var lensQuery phonetarget.LensQuery
+	var tenantIDs []string
+	var devices []lensclient.Device
+	if strings.TrimSpace(cfg.Lens.ClientID) != "" && strings.TrimSpace(cfg.Lens.ClientSecret) != "" {
+		lensTransport := telemetry.InstrumentHTTPTransport(http.DefaultTransport.(*http.Transport).Clone(), runtimeEmitter, "lens")
+		lensHTTP := &http.Client{Transport: lensTransport, Timeout: cfg.Lens.RequestTimeout}
+		lens, err = lensclient.New(lensclient.Config{
+			TokenURL: cfg.Lens.TokenURL, GraphQLURL: cfg.Lens.GraphQLURL,
+			ClientID: cfg.Lens.ClientID, ClientSecret: cfg.Lens.ClientSecret,
+			PageSize: cfg.Lens.PageSize, MaxAttempts: cfg.Lens.Retry.MaxAttempts,
+			MinBackoff: cfg.Lens.Retry.MinBackoff, MaxBackoff: cfg.Lens.Retry.MaxBackoff,
+			HTTPClient: lensHTTP, Emitter: runtimeEmitter,
+		})
+		if err != nil {
+			logger.Error("build Lens client", "error", err)
+			return 1
+		}
+		lensQuery = lens
+		tenantIDs, devices, err = discoverDevices(ctx, lens, cfg.Lens.Tenants)
+		if err != nil {
+			logger.Error("discover Lens devices", "error", err)
+			return 1
+		}
+	} else {
+		devices, tenantIDs, err = staticPhoneDevices(cfg.Phone.Targets, cfg.Lens.Tenants)
+		if err != nil {
+			logger.Error("prepare static phone targets", "error", err)
+			return 1
+		}
 	}
 	runtimeEmitter.SetTenants(tenantIDs)
 	runtimeCfg := *cfg
 	runtimeCfg.Lens.Tenants = tenantIDs
-	phoneTargets, err := resolvePhoneTargets(ctx, &runtimeCfg, lens, runtimeEmitter, devices)
+	phoneTargets, err := resolvePhoneTargets(ctx, &runtimeCfg, lensQuery, runtimeEmitter, devices)
 	if err != nil {
 		logger.Error("resolve phone targets", "error", err)
 		return 1
 	}
 
 	registry := collector.NewRegistry()
+	services := map[string]any{phonecollector.ServiceTargets: phoneTargets}
+	if lens != nil {
+		services["lens"] = lens
+		services["lensclient"] = lens
+	}
 	deps := collector.Deps{
 		Config: &runtimeCfg, Emitter: runtimeEmitter, Registry: registry,
-		Services: map[string]any{
-			"lens": lens, "lensclient": lens,
-			phonecollector.ServiceTargets: phoneTargets,
-		},
+		Services: services,
 	}
 	registerAll(deps)
 	if err := runtimeEmitter.LogEvent(ctx, semconv.EventExporterStartup, "polylens2otel started", time.Now(),
@@ -161,7 +176,7 @@ func run(ctx context.Context, args []string, stdout, stderr io.Writer) int {
 		}()
 	}
 	start("collector scheduler", func() error { return collector.NewScheduler(runtimeEmitter).Run(runCtx, registry) })
-	if runtimeCfg.Lens.Stream.Enabled && len(devices) > 0 {
+	if lens != nil && runtimeCfg.Lens.Stream.Enabled && len(devices) > 0 {
 		ids := make([]string, 0, len(devices))
 		for _, device := range devices {
 			ids = append(ids, device.ID)
@@ -185,6 +200,29 @@ func run(ctx context.Context, args []string, stdout, stderr io.Writer) int {
 	cancel()
 	wg.Wait()
 	return exitCode
+}
+
+func staticPhoneDevices(targets map[string]string, configuredTenants []string) ([]lensclient.Device, []string, error) {
+	tenantIDs := append([]string(nil), configuredTenants...)
+	if len(tenantIDs) > 1 && len(targets) > 0 {
+		return nil, nil, errors.New("static phone targets without Lens credentials support at most one tenant")
+	}
+	if len(tenantIDs) == 0 {
+		tenantIDs = []string{discoveryTenantID}
+	}
+	tenantID := tenantIDs[0]
+	deviceIDs := make([]string, 0, len(targets))
+	for deviceID := range targets {
+		deviceIDs = append(deviceIDs, deviceID)
+	}
+	sort.Strings(deviceIDs)
+	devices := make([]lensclient.Device, 0, len(deviceIDs))
+	for _, deviceID := range deviceIDs {
+		devices = append(devices, lensclient.Device{
+			TenantID: tenantID, ID: deviceID, MACAddress: deviceID, InternalIP: strings.TrimSpace(targets[deviceID]),
+		})
+	}
+	return devices, tenantIDs, nil
 }
 
 func discoverDevices(ctx context.Context, lens *lensclient.Client, configured []string) ([]string, []lensclient.Device, error) {
@@ -213,11 +251,15 @@ func discoverDevices(ctx context.Context, lens *lensclient.Client, configured []
 }
 
 func resolvePhoneTargets(ctx context.Context, cfg *config.Config, lens phonetarget.LensQuery, emitter telemetry.Emitter, devices []lensclient.Device) ([]phonecollector.Target, error) {
+	return resolvePhoneTargetsWithFactory(ctx, cfg, lens, emitter, devices, nil)
+}
+
+func resolvePhoneTargetsWithFactory(ctx context.Context, cfg *config.Config, lens phonetarget.LensQuery, emitter telemetry.Emitter, devices []lensclient.Device, newClient func(phoneclient.Config) (phonetarget.API, error)) ([]phonecollector.Target, error) {
 	if !cfg.Phone.Enabled {
 		return nil, nil
 	}
 	var policy phonetarget.PolicyPasswordSource
-	if cfg.Phone.Auth.FromLensPolicy {
+	if cfg.Phone.Auth.FromLensPolicy && lens != nil {
 		lensPolicy, err := phonetarget.NewLensPolicySource(lens)
 		if err != nil {
 			return nil, err
@@ -228,7 +270,8 @@ func resolvePhoneTargets(ctx context.Context, cfg *config.Config, lens phonetarg
 		Targets: cfg.Phone.Targets, Username: cfg.Phone.Auth.Username,
 		Password: phonetarget.NewSecret(cfg.Phone.Auth.Password), FromLensPolicy: cfg.Phone.Auth.FromLensPolicy,
 		Timeout: cfg.Phone.RequestTimeout, HTTPEmitter: emitter,
-		TLS: phoneclient.TLSConfig{VerifyChain: cfg.Phone.TLS.VerifyChain, CAFile: cfg.Phone.TLS.CAFile},
+		TLS:       phoneclient.TLSConfig{VerifyChain: cfg.Phone.TLS.VerifyChain, CAFile: cfg.Phone.TLS.CAFile},
+		NewClient: newClient,
 	}, policy, emitter)
 	if err != nil {
 		return nil, err

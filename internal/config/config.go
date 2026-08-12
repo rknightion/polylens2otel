@@ -1,6 +1,7 @@
 package config
 
 import (
+	"encoding/hex"
 	"fmt"
 	"os"
 	"strings"
@@ -206,7 +207,6 @@ func envTransform(key, value string) (string, any) {
 func (c Config) Validate() error {
 	var missing []string
 	for key, value := range map[string]string{
-		"lens.client_id": c.Lens.ClientID, "lens.client_secret": c.Lens.ClientSecret,
 		"otlp.endpoint": c.OTLP.Endpoint, "otlp.grafana_cloud.instance_id": c.OTLP.GrafanaCloud.InstanceID,
 		"otlp.grafana_cloud.token": c.OTLP.GrafanaCloud.Token,
 	} {
@@ -217,8 +217,28 @@ func (c Config) Validate() error {
 	if c.Phone.Enabled && strings.TrimSpace(c.Phone.Auth.Password) == "" {
 		missing = append(missing, "phone.auth.password")
 	}
+	lensClientIDSet := strings.TrimSpace(c.Lens.ClientID) != ""
+	lensClientSecretSet := strings.TrimSpace(c.Lens.ClientSecret) != ""
+	if lensClientIDSet != lensClientSecretSet {
+		if !lensClientIDSet {
+			missing = append(missing, "lens.client_id")
+		}
+		if !lensClientSecretSet {
+			missing = append(missing, "lens.client_secret")
+		}
+	}
 	if len(missing) > 0 {
 		return fmt.Errorf("required configuration missing: %s", strings.Join(missing, ", "))
+	}
+	if !lensClientIDSet && c.Phone.Enabled && len(c.Phone.Targets) > 0 {
+		if len(c.Lens.Tenants) > 1 {
+			return fmt.Errorf("phone.targets without Lens credentials supports at most one lens.tenants entry")
+		}
+		for deviceID := range c.Phone.Targets {
+			if !isStaticPhoneMAC(deviceID) {
+				return fmt.Errorf("phone.targets key %q must be a 12-hex-digit MAC when Lens credentials are absent", deviceID)
+			}
+		}
 	}
 	if c.Lens.PageSize < 1 || c.Lens.PageSize > 5000 {
 		return fmt.Errorf("lens.page_size must be between 1 and 5000")
@@ -236,4 +256,12 @@ func (c Config) Validate() error {
 		return err
 	}
 	return nil
+}
+
+func isStaticPhoneMAC(value string) bool {
+	if len(value) != 12 {
+		return false
+	}
+	decoded, err := hex.DecodeString(value)
+	return err == nil && len(decoded) == 6
 }

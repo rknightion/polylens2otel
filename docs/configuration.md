@@ -15,6 +15,8 @@ The generated [environment reference](env-vars.md) describes every key.
 
 Set `lens.tenants` to a list of tenant IDs. Leave it empty to query the tenant list and discover them. Every emitted metric, log and span receives `tenant.id` at the telemetry boundary.
 
+Lens collection is enabled when both `lens.client_id` and `lens.client_secret` are set. They must be configured together. When both are absent, Lens polling, CDR collection and streaming are disabled; the exporter continues with self-observability and any explicit static phone targets.
+
 ## Phone targets
 
 Lens supplies each device's `internalIp`, but that value can be stale or wrong. `phone.targets` is a map from Lens device ID to a fixed host and takes precedence:
@@ -26,6 +28,8 @@ phone:
 ```
 
 The exporter does not scan. It contacts only the Lens-provided address or the operator's override. Before any password is sent, the phone certificate CN must match the Lens MAC address.
+
+For phone-only operation without Lens credentials, each target key must instead be the certificate's 12-hex-digit MAC. Only static targets are contacted, `phone.auth.password` supplies the fallback credential, and the default policy lookup records `polylens2otel.api.unexpected` before using that fallback. Configure zero or one `lens.tenants` entry; an empty list stamps the reserved `_discovery` tenant.
 
 ## Phone configuration parameters
 

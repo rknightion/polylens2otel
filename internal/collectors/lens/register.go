@@ -62,6 +62,9 @@ func Register(d collector.Deps) {
 		return
 	}
 	c, _ := d.Service(serviceName).(client)
+	if c == nil {
+		return
+	}
 	cfg := collectorConfig(d.Config)
 	d.Registry.Register(&devicesCollector{baseCollector: baseCollector{
 		id: devicesID, interval: cfg.LensDevices, client: c, tenantIDs: cfg.Tenants, maxDevices: cfg.MaxDevices,

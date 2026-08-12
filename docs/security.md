@@ -4,7 +4,7 @@
 
 Lens mutations are rejected inside `internal/lensclient` before token minting or transport use. The phone client exposes named readers only: GET endpoints and the POST-only `config/get` reader. There is no generic request method.
 
-The exporter never scans a network. A phone target must come from that device's Lens inventory record or from `phone.targets`.
+The exporter never scans a network. A phone target must come from that device's Lens inventory record or from `phone.targets`. When Lens credentials are absent, the exporter contacts only static targets whose keys are 12-hex-digit certificate MAC identities.
 
 ## Phone identity
 

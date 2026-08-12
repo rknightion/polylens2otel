@@ -17,8 +17,8 @@ Configuration precedence is defaults, YAML, then `PL2O_` environment variables. 
 | `collectors.phone_network_info` | `duration` | `5m0s` | `PL2O_COLLECTORS__PHONE_NETWORK_INFO` | No | Optional | Polling interval for phone network information. |
 | `collectors.phone_status` | `duration` | `1m0s` | `PL2O_COLLECTORS__PHONE_STATUS` | No | Optional | Polling interval for phone status. |
 | `collectors.selfobs_internal` | `duration` | `1m0s` | `PL2O_COLLECTORS__SELFOBS_INTERNAL` | No | Optional | Emission interval for exporter self-observability. |
-| `lens.client_id` | `string` | `` | `PL2O_LENS__CLIENT_ID` | No | Required | OAuth client identifier. |
-| `lens.client_secret` | `string` | `` | `PL2O_LENS__CLIENT_SECRET` | Yes (environment only) | Required | OAuth client secret; supply only through the environment. |
+| `lens.client_id` | `string` | `` | `PL2O_LENS__CLIENT_ID` | No | Required together for Lens collection | OAuth client identifier; omit with lens.client_secret for static phone-only collection. |
+| `lens.client_secret` | `string` | `` | `PL2O_LENS__CLIENT_SECRET` | Yes (environment only) | Required together for Lens collection | OAuth client secret; supply only through the environment, or omit with lens.client_id for static phone-only collection. |
 | `lens.graphql_url` | `string` | `https://api.silica-prod01.io.lens.poly.com/graphql` | `PL2O_LENS__GRAPHQL_URL` | No | Optional | Poly Lens GraphQL endpoint. |
 | `lens.page_size` | `int` | `10` | `PL2O_LENS__PAGE_SIZE` | No | Optional | Lens page size; validation permits 1 through 5000. Keep the value stable across follow-up pages. |
 | `lens.request_timeout` | `duration` | `30s` | `PL2O_LENS__REQUEST_TIMEOUT` | No | Optional | Timeout for an individual Lens request. |
@@ -46,7 +46,7 @@ Configuration precedence is defaults, YAML, then `PL2O_` environment variables. 
 | `phone.config_params` | `[]string` | `[reg.1.address, reg.2.address, reg.1.label, device.syslog.serverName, tcpIpApp.sntp.address, softkey.1.enable]` | `PL2O_PHONE__CONFIG_PARAMS` | No | Optional | Read-only phone configuration parameters requested by the phone config collector; at most 50 to bound the phone response and resulting metric-series count. |
 | `phone.enabled` | `bool` | `true` | `PL2O_PHONE__ENABLED` | No | Optional | Enable phone REST collectors. When enabled, phone.auth.password is required. |
 | `phone.request_timeout` | `duration` | `15s` | `PL2O_PHONE__REQUEST_TIMEOUT` | No | Optional | Timeout for an individual phone REST request. |
-| `phone.targets` | `map[string]string` | `{}` | `PL2O_PHONE__TARGETS` | No | Optional | Static per-device targets. Each <device-id> overrides that device's Lens internalIp; discovery never scans. |
+| `phone.targets` | `map[string]string` | `{}` | `PL2O_PHONE__TARGETS` | No | Optional | Static per-device targets. Each <device-id> overrides Lens internalIp; without Lens credentials each key must be the phone certificate's 12-hex-digit MAC. Discovery never scans. |
 | `phone.tls.ca_file` | `string` | `` | `PL2O_PHONE__TLS__CA_FILE` | No | Optional | Optional CA certificate file for phone TLS verification. The certificate CN must match the Lens MAC before credentials are sent. |
 | `phone.tls.verify_chain` | `bool` | `false` | `PL2O_PHONE__TLS__VERIFY_CHAIN` | No | Optional | Verify the phone TLS certificate chain. |
 | `profiling.pyroscope.application` | `string` | `polylens2otel` | `PL2O_PROFILING__PYROSCOPE__APPLICATION` | No | Optional | Pyroscope application name. |
@@ -57,14 +57,14 @@ Configuration precedence is defaults, YAML, then `PL2O_` environment variables. 
 
 ## Static phone targets
 
-`phone.targets` is a YAML map of device IDs to DNS names or addresses. It is an explicit override for Lens `internalIp`; no LAN discovery or scanning occurs. Use a device ID that identifies the Lens device, and ensure the phone certificate CN matches that device's Lens MAC before credentials are sent.
+`phone.targets` is a YAML map of device IDs to DNS names or addresses. With Lens credentials, it is an explicit override for Lens `internalIp`; no LAN discovery or scanning occurs. Without Lens credentials, only these static targets are collected and each key must be the phone certificate's 12-hex-digit MAC, which preserves the mandatory certificate-CN identity check before credentials are sent. Configure zero or one `lens.tenants` entry to select the telemetry tenant; an empty list uses `_discovery`.
 
 ```yaml
 phone:
   targets:
-    <device-id>: phone.example.invalid
+    '482567000001': phone.example.invalid
 ```
 
 ## Secret environment variables
 
-Set required secrets through the process environment, never in YAML: `PL2O_LENS__CLIENT_SECRET`, `PL2O_PHONE__AUTH__PASSWORD` (when phones are enabled), `PL2O_OTLP__GRAFANA_CLOUD__TOKEN`, and `PL2O_PROFILING__PYROSCOPE__BASIC_AUTH_PASSWORD` when Pyroscope authentication is used.
+Set required secrets through the process environment, never in YAML: `PL2O_LENS__CLIENT_SECRET` (when Lens collection is enabled), `PL2O_PHONE__AUTH__PASSWORD` (when phones are enabled), `PL2O_OTLP__GRAFANA_CLOUD__TOKEN`, and `PL2O_PROFILING__PYROSCOPE__BASIC_AUTH_PASSWORD` when Pyroscope authentication is used.

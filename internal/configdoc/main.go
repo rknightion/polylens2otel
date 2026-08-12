@@ -44,8 +44,8 @@ var comments = map[string]string{
 	"lens.token_url":                          "OAuth token endpoint for Poly Lens.",
 	"lens.graphql_url":                        "Poly Lens GraphQL endpoint.",
 	"lens.websocket_url":                      "Poly Lens GraphQL WebSocket endpoint for deviceStream.",
-	"lens.client_id":                          "OAuth client identifier.",
-	"lens.client_secret":                      "OAuth client secret; supply only through the environment.",
+	"lens.client_id":                          "OAuth client identifier; omit with lens.client_secret for static phone-only collection.",
+	"lens.client_secret":                      "OAuth client secret; supply only through the environment, or omit with lens.client_id for static phone-only collection.",
 	"lens.tenants":                            "Lens tenant IDs to collect. An empty list discovers tenants through the read-only tenants query.",
 	"lens.page_size":                          "Lens page size; validation permits 1 through 5000. Keep the value stable across follow-up pages.",
 	"lens.request_timeout":                    "Timeout for an individual Lens request.",
@@ -57,7 +57,7 @@ var comments = map[string]string{
 	"lens.stream.min_backoff":                 "Initial deviceStream reconnect backoff.",
 	"lens.stream.max_backoff":                 "Maximum deviceStream reconnect backoff.",
 	"phone.enabled":                           "Enable phone REST collectors. When enabled, phone.auth.password is required.",
-	"phone.targets":                           "Static per-device targets. Each <device-id> overrides that device's Lens internalIp; discovery never scans.",
+	"phone.targets":                           "Static per-device targets. Each <device-id> overrides Lens internalIp; without Lens credentials each key must be the phone certificate's 12-hex-digit MAC. Discovery never scans.",
 	"phone.config_params":                     "Read-only phone configuration parameters requested by the phone config collector; at most 50 to bound the phone response and resulting metric-series count.",
 	"phone.request_timeout":                   "Timeout for an individual phone REST request.",
 	"phone.auth.username":                     "Digest authentication username; Polycom is the default.",
@@ -229,8 +229,10 @@ func defaultValue(v reflect.Value) string {
 
 func required(key string) string {
 	switch key {
-	case "lens.client_id", "lens.client_secret", "otlp.endpoint", "otlp.grafana_cloud.instance_id", "otlp.grafana_cloud.token", "state.dir":
+	case "otlp.endpoint", "otlp.grafana_cloud.instance_id", "otlp.grafana_cloud.token", "state.dir":
 		return "Required"
+	case "lens.client_id", "lens.client_secret":
+		return "Required together for Lens collection"
 	case "phone.auth.password":
 		return "Required when phone.enabled is true"
 	default:
@@ -276,7 +278,7 @@ func renderDocs(fields []field) []byte {
 		}
 		fmt.Fprintf(&b, "| `%s` | `%s` | `%s` | `%s` | %s | %s | %s |\n", f.Key, f.Type, escapeTable(f.Default), envName(f.Key), secret, f.Required, f.Comment)
 	}
-	b.WriteString("\n## Static phone targets\n\n`phone.targets` is a YAML map of device IDs to DNS names or addresses. It is an explicit override for Lens `internalIp`; no LAN discovery or scanning occurs. Use a device ID that identifies the Lens device, and ensure the phone certificate CN matches that device's Lens MAC before credentials are sent.\n\n```yaml\nphone:\n  targets:\n    <device-id>: phone.example.invalid\n```\n\n## Secret environment variables\n\nSet required secrets through the process environment, never in YAML: `PL2O_LENS__CLIENT_SECRET`, `PL2O_PHONE__AUTH__PASSWORD` (when phones are enabled), `PL2O_OTLP__GRAFANA_CLOUD__TOKEN`, and `PL2O_PROFILING__PYROSCOPE__BASIC_AUTH_PASSWORD` when Pyroscope authentication is used.\n")
+	b.WriteString("\n## Static phone targets\n\n`phone.targets` is a YAML map of device IDs to DNS names or addresses. With Lens credentials, it is an explicit override for Lens `internalIp`; no LAN discovery or scanning occurs. Without Lens credentials, only these static targets are collected and each key must be the phone certificate's 12-hex-digit MAC, which preserves the mandatory certificate-CN identity check before credentials are sent. Configure zero or one `lens.tenants` entry to select the telemetry tenant; an empty list uses `_discovery`.\n\n```yaml\nphone:\n  targets:\n    '482567000001': phone.example.invalid\n```\n\n## Secret environment variables\n\nSet required secrets through the process environment, never in YAML: `PL2O_LENS__CLIENT_SECRET` (when Lens collection is enabled), `PL2O_PHONE__AUTH__PASSWORD` (when phones are enabled), `PL2O_OTLP__GRAFANA_CLOUD__TOKEN`, and `PL2O_PROFILING__PYROSCOPE__BASIC_AUTH_PASSWORD` when Pyroscope authentication is used.\n")
 	return []byte(b.String())
 }
 

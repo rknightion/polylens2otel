@@ -155,6 +155,14 @@ func TestRegisterUsesFrozenLensCollectors(t *testing.T) {
 	}
 }
 
+func TestRegisterSkipsLensCollectorsWhenClientIsUnavailable(t *testing.T) {
+	registry := collector.NewRegistry()
+	Register(collector.Deps{Config: &config.Config{}, Registry: registry})
+	if got := len(registry.Entries()); got != 0 {
+		t.Fatalf("registered collectors = %d, want 0 without Lens client", got)
+	}
+}
+
 func TestDevicesCollectorRejectsDeviceCountOverMax(t *testing.T) {
 	client := fixtureClient(t)
 	recorder := telemetrytest.New()

@@ -13,7 +13,7 @@ lens:
   graphql_url: "https://api.silica-prod01.io.lens.poly.com/graphql"
   # Poly Lens GraphQL WebSocket endpoint for deviceStream.
   websocket_url: "wss://api.silica-prod01.io.lens.poly.com/graphql"
-  # OAuth client identifier.
+  # OAuth client identifier; omit with lens.client_secret for static phone-only collection.
   client_id: ""
   # lens.client_secret is secret; set PL2O_LENS__CLIENT_SECRET in the environment.
   # Lens tenant IDs to collect. An empty list discovers tenants through the read-only tenants query.
@@ -41,7 +41,7 @@ lens:
 phone:
   # Enable phone REST collectors. When enabled, phone.auth.password is required.
   enabled: true
-  # Static per-device targets. Each <device-id> overrides that device's Lens internalIp; discovery never scans.
+  # Static per-device targets. Each <device-id> overrides Lens internalIp; without Lens credentials each key must be the phone certificate's 12-hex-digit MAC. Discovery never scans.
   targets:
     <device-id>: phone.example.invalid
   # Read-only phone configuration parameters requested by the phone config collector; at most 50 to bound the phone response and resulting metric-series count.
