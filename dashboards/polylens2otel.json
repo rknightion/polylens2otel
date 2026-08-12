@@ -1,0 +1,234 @@
+{
+  "panels": [
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "grafanacloud-prom"
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "targets": [
+        {
+          "expr": "polylens_device_connected",
+          "legendFormat": "polylens.device.connected",
+          "refId": "A"
+        },
+        {
+          "expr": "polylens_device_last_detected_seconds",
+          "legendFormat": "polylens.device.last_detected_seconds",
+          "refId": "B"
+        },
+        {
+          "expr": "polylens_device_last_config_request_seconds",
+          "legendFormat": "polylens.device.last_config_request_seconds",
+          "refId": "C"
+        },
+        {
+          "expr": "polylens_device_firmware_info",
+          "legendFormat": "polylens.device.firmware_info",
+          "refId": "D"
+        },
+        {
+          "expr": "polylens_device_firmware_current",
+          "legendFormat": "polylens.device.firmware_current",
+          "refId": "E"
+        },
+        {
+          "expr": "polylens_device_active_calls",
+          "legendFormat": "polylens.device.active_calls",
+          "refId": "F"
+        },
+        {
+          "expr": "polylens_stream_connected",
+          "legendFormat": "polylens.stream.connected",
+          "refId": "G"
+        }
+      ],
+      "title": "Lens fleet",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "grafanacloud-prom"
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 12,
+        "y": 0
+      },
+      "id": 2,
+      "targets": [
+        {
+          "expr": "polyphone_uptime_seconds",
+          "legendFormat": "polyphone.uptime_seconds",
+          "refId": "A"
+        },
+        {
+          "expr": "polyphone_network_packets_total",
+          "legendFormat": "polyphone.network.packets",
+          "refId": "B"
+        },
+        {
+          "expr": "polyphone_line_registered",
+          "legendFormat": "polyphone.line.registered",
+          "refId": "C"
+        },
+        {
+          "expr": "polyphone_lines_total",
+          "legendFormat": "polyphone.lines_total",
+          "refId": "D"
+        },
+        {
+          "expr": "polyphone_config_param_source",
+          "legendFormat": "polyphone.config_param_source",
+          "refId": "E"
+        },
+        {
+          "expr": "polyphone_api_state",
+          "legendFormat": "polyphone.api_state",
+          "refId": "F"
+        }
+      ],
+      "title": "Phone fleet",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "grafanacloud-prom"
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 0,
+        "y": 9
+      },
+      "id": 3,
+      "targets": [
+        {
+          "expr": "polylens2otel_build_info",
+          "legendFormat": "polylens2otel.build_info",
+          "refId": "A"
+        },
+        {
+          "expr": "polylens2otel_collector_duration_seconds",
+          "legendFormat": "polylens2otel.collector.duration",
+          "refId": "B"
+        },
+        {
+          "expr": "polylens2otel_collector_availability_ratio",
+          "legendFormat": "polylens2otel.collector.availability",
+          "refId": "C"
+        },
+        {
+          "expr": "polylens2otel_collector_expected_interval_seconds",
+          "legendFormat": "polylens2otel.collector.expected_interval",
+          "refId": "D"
+        },
+        {
+          "expr": "polylens2otel_http_client_request_duration_seconds",
+          "legendFormat": "polylens2otel.http.client.request.duration",
+          "refId": "E"
+        },
+        {
+          "expr": "polylens2otel_http_4xx_total",
+          "legendFormat": "polylens2otel.http_4xx",
+          "refId": "F"
+        },
+        {
+          "expr": "polylens2otel_http_5xx_total",
+          "legendFormat": "polylens2otel.http_5xx",
+          "refId": "G"
+        },
+        {
+          "expr": "polylens2otel_api_unexpected_ratio",
+          "legendFormat": "polylens2otel.api.unexpected",
+          "refId": "H"
+        },
+        {
+          "expr": "polylens2otel_auth_token_refresh_total",
+          "legendFormat": "polylens2otel.auth.token.refresh",
+          "refId": "I"
+        },
+        {
+          "expr": "polylens2otel_auth_token_expires_seconds",
+          "legendFormat": "polylens2otel.auth.token.expires_seconds",
+          "refId": "J"
+        },
+        {
+          "expr": "polylens2otel_stream_reconnects_total",
+          "legendFormat": "polylens2otel.stream.reconnects",
+          "refId": "K"
+        },
+        {
+          "expr": "polylens2otel_stream_messages_total",
+          "legendFormat": "polylens2otel.stream.messages",
+          "refId": "L"
+        },
+        {
+          "expr": "polylens2otel_stream_last_message_seconds",
+          "legendFormat": "polylens2otel.stream.last_message_seconds",
+          "refId": "M"
+        },
+        {
+          "expr": "polylens2otel_ingest_emitted_points_total",
+          "legendFormat": "polylens2otel.ingest.emitted_points",
+          "refId": "N"
+        },
+        {
+          "expr": "polylens2otel_ingest_source_records_total",
+          "legendFormat": "polylens2otel.ingest.source_records",
+          "refId": "O"
+        },
+        {
+          "expr": "polylens2otel_checkpoint_persist_errors_total",
+          "legendFormat": "polylens2otel.checkpoint.persist.errors",
+          "refId": "P"
+        }
+      ],
+      "title": "Exporter health",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "grafanacloud-logs"
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 24,
+        "x": 0,
+        "y": 18
+      },
+      "id": 4,
+      "targets": [
+        {
+          "expr": "{service_name=\"polylens2otel\"} | event_name=\"polylens.cdr\"",
+          "refId": "A"
+        }
+      ],
+      "title": "Lens CDR events",
+      "type": "logs"
+    }
+  ],
+  "refresh": "1m",
+  "schemaVersion": 41,
+  "tags": [
+    "polylens2otel",
+    "generated"
+  ],
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "timezone": "browser",
+  "title": "polylens2otel",
+  "uid": "polylens2otel"
+}

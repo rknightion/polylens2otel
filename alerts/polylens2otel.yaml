@@ -1,0 +1,73 @@
+apiVersion: 1
+groups:
+  - orgId: 1
+    name: polylens2otel
+    folder: polylens2otel
+    interval: 1m
+    rules:
+      - uid: polylens2otel-phone-api-disabled
+        title: Phone management API is disabled
+        condition: A
+        for: 2m
+        noDataState: NoData
+        execErrState: Error
+        labels:
+          pipeline: polylens2otel
+          severity: warning
+          source: polylens2otel
+        annotations:
+          summary: Phone management API is disabled
+        data:
+          - refId: A
+            relativeTimeRange: {from: 300, to: 0}
+            datasourceUid: grafanacloud-prom
+            model:
+              datasource: {type: prometheus, uid: grafanacloud-prom}
+              editorMode: code
+              expr: 'polyphone_api_state{state="api_disabled"} == 1'
+              instant: true
+              refId: A
+      - uid: polylens2otel-line-unregistered
+        title: A configured phone line is unregistered
+        condition: A
+        for: 2m
+        noDataState: NoData
+        execErrState: Error
+        labels:
+          pipeline: polylens2otel
+          severity: critical
+          source: polylens2otel
+        annotations:
+          summary: A configured phone line is unregistered
+        data:
+          - refId: A
+            relativeTimeRange: {from: 300, to: 0}
+            datasourceUid: grafanacloud-prom
+            model:
+              datasource: {type: prometheus, uid: grafanacloud-prom}
+              editorMode: code
+              expr: 'polyphone_line_registered == 0'
+              instant: true
+              refId: A
+      - uid: polylens2otel-collector-unavailable
+        title: A collector run failed
+        condition: A
+        for: 2m
+        noDataState: NoData
+        execErrState: Error
+        labels:
+          pipeline: polylens2otel
+          severity: warning
+          source: polylens2otel
+        annotations:
+          summary: A collector run failed
+        data:
+          - refId: A
+            relativeTimeRange: {from: 300, to: 0}
+            datasourceUid: grafanacloud-prom
+            model:
+              datasource: {type: prometheus, uid: grafanacloud-prom}
+              editorMode: code
+              expr: 'polylens2otel_collector_availability_ratio == 0'
+              instant: true
+              refId: A
