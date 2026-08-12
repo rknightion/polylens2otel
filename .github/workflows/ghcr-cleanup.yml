@@ -1,0 +1,77 @@
+name: Clean up GHCR images
+
+on:
+  schedule:
+    - cron: '17 3 * * 0'
+  workflow_dispatch:
+    inputs:
+      delete:
+        description: Delete the listed candidates (disabled by default)
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  cleanup:
+    name: Delete old untagged image manifests
+    runs-on: ubuntu-latest
+    env:
+      # Scheduled runs have no inputs and must always remain dry runs.
+      DELETE_CANDIDATES: ${{ inputs.delete || 'false' }}
+    steps:
+      - name: List candidates and optionally delete them
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+        with:
+          github-token: ${{ github.token }}
+          script: |
+            const owner = context.repo.owner;
+            const packageName = context.repo.repo;
+            const deleteCandidates = process.env.DELETE_CANDIDATES === 'true';
+            const cutoff = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+            const ownerInfo = await github.rest.users.getByUsername({ username: owner });
+            const route = ownerInfo.data.type === 'Organization'
+              ? 'orgs/{org}/packages/{package_type}/{package_name}/versions'
+              : 'users/{username}/packages/{package_type}/{package_name}/versions';
+            const routeParameters = ownerInfo.data.type === 'Organization'
+              ? { org: owner, package_type: 'container', package_name: packageName }
+              : { username: owner, package_type: 'container', package_name: packageName };
+            const versions = await github.paginate(github.request, `GET /${route}`, {
+              ...routeParameters,
+              per_page: 100,
+            });
+
+            const protectedTag = (tag) => /^buildcache(?:-|$)/.test(tag)
+              || tag === 'latest'
+              || tag === 'main'
+              || /^v/.test(tag)
+              || /^\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?$/.test(tag)
+              || /^main-[0-9a-f]{7,}$/i.test(tag);
+            const candidates = versions.filter((version) => {
+              const tags = version.metadata?.container?.tags ?? [];
+              const createdAt = new Date(version.created_at);
+              return tags.length === 0
+                && createdAt < cutoff
+                && !tags.some(protectedTag);
+            });
+
+            core.notice(`Dry run: ${candidates.length} untagged manifests older than 30 days would be deleted.`);
+            for (const version of candidates) {
+              core.notice(`Candidate: id=${version.id} digest=${version.name} created_at=${version.created_at}`);
+            }
+
+            if (!deleteCandidates) {
+              core.notice('Deletion is disabled. Re-run manually with delete=true to remove the listed candidates.');
+              return;
+            }
+
+            for (const version of candidates) {
+              await github.request(`DELETE /${route}/{package_version_id}`, {
+                ...routeParameters,
+                package_version_id: version.id,
+              });
+              core.info(`Deleted package version ${version.id} (${version.name}).`);
+            }
