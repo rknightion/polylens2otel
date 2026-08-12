@@ -111,13 +111,13 @@ func TestCertificateCNMismatchIsUnexpectedBeforeCredential(t *testing.T) {
 
 func TestLensPolicyPasswordUsesGetPolicyByID(t *testing.T) {
 	const canary = "policy-password-canary"
-	query := &stubLensQuery{response: `{"getPolicyById":{"configurationAttributes":[{"name":"device.auth.localAdminPassword","value":"` + canary + `"}]}}`}
-	policy, err := phonetarget.NewLensPolicySource(query, phonetarget.PolicyIDFunc(func(_ context.Context, device lensclient.Device) (string, error) {
-		if device.ID != "deskie" {
-			t.Fatalf("policy requested for device %q", device.ID)
-		}
-		return "winning-policy", nil
-	}))
+	query := &stubLensQuery{responses: []string{
+		`{"getDeviceParametersExtended":[{"name":"device.auth.localAdminPassword","policyDeploymentScope":"FAMILY_GROUP","collectionId":"winning-group","collectionName":"voice"}]}`,
+		`{"device":{"model":{"hardwareFamily":{"policyFamilyId":"winning-family"}}}}`,
+		`{"getPolicies":[{"policyId":"winning-policy","configurationAttributes":[{"name":"device.auth.localAdminPassword"}]}]}`,
+		`{"getPolicyById":{"configurationAttributes":[{"name":"device.auth.localAdminPassword","currentValue":"` + canary + `"}]}}`,
+	}}
+	policy, err := phonetarget.NewLensPolicySource(query)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -134,18 +134,128 @@ func TestLensPolicyPasswordUsesGetPolicyByID(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if _, err := resolver.Resolve(context.Background(), []lensclient.Device{{ID: "deskie", InternalIP: "192.0.2.139", MACAddress: "48:25:67:90:8b:97"}}); err != nil {
+	if _, err := resolver.Resolve(context.Background(), []lensclient.Device{{
+		TenantID: "tenant", ID: "deskie", InternalIP: "192.0.2.139", MACAddress: "48:25:67:90:8b:97",
+	}}); err != nil {
 		t.Fatal(err)
 	}
 	if usedPassword != canary {
 		t.Fatalf("phone password = %q, want policy password", usedPassword)
 	}
-	if !strings.Contains(query.document, "getPolicyById") || !strings.Contains(query.document, "configurationAttributes") {
-		t.Fatalf("policy query does not use getPolicyById configurationAttributes: %s", query.document)
+	if len(query.documents) != 4 {
+		t.Fatalf("Lens query count = %d, want 4", len(query.documents))
 	}
-	variables, ok := query.variables.(map[string]string)
-	if !ok || variables["policyID"] != "winning-policy" {
-		t.Fatalf("policy variables = %#v, want winning policy ID", query.variables)
+	if !strings.Contains(query.documents[0], "getDeviceParametersExtended") ||
+		!strings.Contains(query.documents[1], "hardwareFamily") ||
+		!strings.Contains(query.documents[2], "getPolicies") ||
+		!strings.Contains(query.documents[3], "getPolicyById") ||
+		!strings.Contains(query.documents[3], "currentValue") {
+		t.Fatalf("unexpected winning-policy query chain: %#v", query.documents)
+	}
+	winningVariables, ok := query.variables[2].(map[string]any)
+	if !ok || winningVariables["groupID"] != "winning-group" ||
+		winningVariables["policyFamilyID"] != "winning-family" || winningVariables["scope"] != "FAMILY_GROUP" {
+		t.Fatalf("winning-policy variables = %#v", query.variables[2])
+	}
+	policyVariables, ok := query.variables[3].(map[string]string)
+	if !ok || policyVariables["policyID"] != "winning-policy" {
+		t.Fatalf("policy variables = %#v, want winning policy ID", query.variables[3])
+	}
+}
+
+func TestLensPolicyPasswordRejectsAmbiguousSelection(t *testing.T) {
+	tests := []struct {
+		name      string
+		responses []string
+		wantError string
+	}{
+		{
+			name: "winning source",
+			responses: []string{`{"getDeviceParametersExtended":[
+				{"name":"device.auth.localAdminPassword","policyDeploymentScope":"GROUP","collectionId":"one"},
+				{"name":"device.auth.localAdminPassword","policyDeploymentScope":"GROUP","collectionId":"two"}
+			]}`},
+			wantError: "resolve one winning Lens policy source",
+		},
+		{
+			name: "candidate policy",
+			responses: []string{
+				`{"getDeviceParametersExtended":[{"name":"device.auth.localAdminPassword","policyDeploymentScope":"GROUP","collectionId":"group"}]}`,
+				`{"getPolicies":[
+					{"policyId":"one","configurationAttributes":[{"name":"device.auth.localAdminPassword"}]},
+					{"policyId":"two","configurationAttributes":[{"name":"device.auth.localAdminPassword"}]}
+				]}`,
+			},
+			wantError: "resolve one winning Lens policy",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			policy, err := phonetarget.NewLensPolicySource(&stubLensQuery{responses: tt.responses})
+			if err != nil {
+				t.Fatal(err)
+			}
+			_, err = policy.LocalAdminPassword(context.Background(), lensclient.Device{
+				TenantID: "tenant", ID: "device", HardwareModel: "model",
+			})
+			if err == nil || err.Error() != tt.wantError {
+				t.Fatalf("LocalAdminPassword() error = %v, want %q", err, tt.wantError)
+			}
+		})
+	}
+}
+
+func TestLensPolicySelectionMapsResolvedScopeSelectors(t *testing.T) {
+	tests := []struct {
+		scope       string
+		want        map[string]any
+		needsFamily bool
+	}{
+		{scope: "DEVICE", want: map[string]any{"deviceID": "device"}},
+		{scope: "DEVICE_MODEL", want: map[string]any{"deviceModel": "model"}},
+		{scope: "SITE", want: map[string]any{"siteID": "collection", "deviceModel": "model"}},
+		{scope: "FAMILY_SITE", want: map[string]any{"siteID": "collection", "policyFamilyID": "family"}, needsFamily: true},
+		{scope: "GROUP", want: map[string]any{"groupID": "collection", "deviceModel": "model"}},
+		{scope: "FAMILY_GROUP", want: map[string]any{"groupID": "collection", "policyFamilyID": "family"}, needsFamily: true},
+		{scope: "FAMILY_MODEL", want: map[string]any{"policyFamilyID": "family"}, needsFamily: true},
+		{scope: "GLOBAL", want: map[string]any{}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.scope, func(t *testing.T) {
+			responses := []string{`{"getDeviceParametersExtended":[{"name":"device.auth.localAdminPassword","policyDeploymentScope":"` + tt.scope + `","collectionId":"collection"}]}`}
+			if tt.needsFamily {
+				responses = append(responses, `{"device":{"model":{"hardwareFamily":{"policyFamilyId":"family"}}}}`)
+			}
+			responses = append(responses, `{"getPolicies":[]}`)
+			query := &stubLensQuery{responses: responses}
+			policy, err := phonetarget.NewLensPolicySource(query)
+			if err != nil {
+				t.Fatal(err)
+			}
+			_, err = policy.LocalAdminPassword(context.Background(), lensclient.Device{
+				TenantID: "tenant", ID: "device", HardwareModel: "model",
+			})
+			if err == nil {
+				t.Fatal("LocalAdminPassword() unexpectedly succeeded without a policy")
+			}
+			variables, ok := query.variables[len(query.variables)-1].(map[string]any)
+			if !ok || variables["tenantID"] != "tenant" || variables["scope"] != tt.scope {
+				t.Fatalf("base variables = %#v", query.variables[len(query.variables)-1])
+			}
+			for key, want := range tt.want {
+				if variables[key] != want {
+					t.Fatalf("%s = %#v, want %#v in %#v", key, variables[key], want, variables)
+				}
+			}
+			for _, key := range []string{"deviceID", "deviceModel", "siteID", "groupID", "policyFamilyID"} {
+				if _, wanted := tt.want[key]; wanted {
+					continue
+				}
+				if _, present := variables[key]; present {
+					t.Fatalf("unexpected selector %s in %#v", key, variables)
+				}
+			}
+		})
 	}
 }
 
@@ -213,15 +323,24 @@ type stubPolicy struct {
 }
 
 type stubLensQuery struct {
-	response  string
-	document  string
-	variables any
+	responses []string
+	documents []string
+	variables []any
+	err       error
 }
 
 func (s *stubLensQuery) Query(_ context.Context, document string, variables, out any) error {
-	s.document = document
-	s.variables = variables
-	return json.Unmarshal([]byte(s.response), out)
+	s.documents = append(s.documents, document)
+	s.variables = append(s.variables, variables)
+	if s.err != nil {
+		return s.err
+	}
+	if len(s.responses) == 0 {
+		return errors.New("unexpected Lens query")
+	}
+	response := s.responses[0]
+	s.responses = s.responses[1:]
+	return json.Unmarshal([]byte(response), out)
 }
 
 func mismatchedTLSServer(t *testing.T, handler http.HandlerFunc) *httptest.Server {

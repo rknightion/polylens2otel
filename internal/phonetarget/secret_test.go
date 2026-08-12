@@ -11,24 +11,18 @@ import (
 func TestSecretFormattingIsAlwaysRedacted(t *testing.T) {
 	const canary = "policy-password-canary"
 	secret := phonetarget.NewSecret(canary)
-	numericFormat := "%d"
-	formatted := []string{
-		fmt.Sprint(secret),
-		fmt.Sprintf("%s", secret),
-		fmt.Sprintf("%q", secret),
-		fmt.Sprintf("%v", secret),
-		fmt.Sprintf("%+v", secret),
-		fmt.Sprintf("%#v", secret),
-		fmt.Sprintf("%x", secret),
-		fmt.Sprintf(numericFormat, secret),
+	formats := []string{
+		"%v", "%+v", "%#v", "%s", "%q", "%x", "%X", "%d", "%o", "%O", "%b", "%c", "%U",
+		"%e", "%E", "%f", "%F", "%g", "%G", "%p", "%T", "%t",
 	}
-	for _, got := range formatted {
-		if got != "[redacted]" {
-			t.Errorf("formatted secret = %q, want [redacted]", got)
-		}
+	for _, format := range formats {
+		got := fmt.Sprintf(format, secret)
 		if strings.Contains(got, canary) {
-			t.Fatalf("formatted secret exposes canary: %q", got)
+			t.Fatalf("format %q exposes canary: %q", format, got)
 		}
+	}
+	if got := fmt.Sprint(secret); got != "[redacted]" {
+		t.Errorf("formatted secret = %q, want [redacted]", got)
 	}
 
 	err := fmt.Errorf("resolve phone credential: %v", secret)

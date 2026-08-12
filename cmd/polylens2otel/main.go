@@ -120,7 +120,7 @@ func run(ctx context.Context, args []string, stdout, stderr io.Writer) int {
 	runtimeEmitter.SetTenants(tenantIDs)
 	runtimeCfg := *cfg
 	runtimeCfg.Lens.Tenants = tenantIDs
-	phoneTargets, err := resolvePhoneTargets(ctx, &runtimeCfg, runtimeEmitter, devices)
+	phoneTargets, err := resolvePhoneTargets(ctx, &runtimeCfg, lens, runtimeEmitter, devices)
 	if err != nil {
 		logger.Error("resolve phone targets", "error", err)
 		return 1
@@ -212,16 +212,24 @@ func discoverDevices(ctx context.Context, lens *lensclient.Client, configured []
 	return tenantIDs, devices, nil
 }
 
-func resolvePhoneTargets(ctx context.Context, cfg *config.Config, emitter telemetry.Emitter, devices []lensclient.Device) ([]phonecollector.Target, error) {
+func resolvePhoneTargets(ctx context.Context, cfg *config.Config, lens phonetarget.LensQuery, emitter telemetry.Emitter, devices []lensclient.Device) ([]phonecollector.Target, error) {
 	if !cfg.Phone.Enabled {
 		return nil, nil
+	}
+	var policy phonetarget.PolicyPasswordSource
+	if cfg.Phone.Auth.FromLensPolicy {
+		lensPolicy, err := phonetarget.NewLensPolicySource(lens)
+		if err != nil {
+			return nil, err
+		}
+		policy = lensPolicy
 	}
 	resolver, err := phonetarget.New(phonetarget.Config{
 		Targets: cfg.Phone.Targets, Username: cfg.Phone.Auth.Username,
 		Password: phonetarget.NewSecret(cfg.Phone.Auth.Password), FromLensPolicy: cfg.Phone.Auth.FromLensPolicy,
 		Timeout: cfg.Phone.RequestTimeout, HTTPEmitter: emitter,
 		TLS: phoneclient.TLSConfig{VerifyChain: cfg.Phone.TLS.VerifyChain, CAFile: cfg.Phone.TLS.CAFile},
-	}, nil, emitter)
+	}, policy, emitter)
 	if err != nil {
 		return nil, err
 	}
