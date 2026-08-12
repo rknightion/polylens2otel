@@ -1,0 +1,44 @@
+name: Lens schema canary
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    - cron: '17 5 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: lens-schema-canary-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  variable-types:
+    name: GraphQL variable types
+    runs-on: ubuntu-latest
+    steps:
+      - name: Harden the runner (audit egress)
+        uses: step-security/harden-runner@b09bb98e06d4d774595224525879c09bc6e98c40 # v2.20.1
+        with:
+          egress-policy: audit
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Set up Go
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+          cache: true
+      - name: Verify current live types and historical negative controls
+        run: go test -v -tags=lenscanary -run '^TestLensGraphQLVariableTypes$' ./internal/lensclient
+      - name: Prove the three historical declarations fail the canary
+        run: |
+          if POLYLENS2OTEL_LENS_CANARY_USE_WAVE1_TYPES=true \
+            go test -v -tags=lenscanary -run '^TestLensGraphQLVariableTypes$' ./internal/lensclient; then
+            echo '::error::The Lens schema canary accepted the three historical wrong types.'
+            exit 1
+          fi
