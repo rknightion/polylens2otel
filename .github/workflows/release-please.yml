@@ -80,3 +80,7 @@ jobs:
       release-tag: ${{ needs.release-please.outputs.tag_name }}
       install-cosign: true
       goreleaser-args: "release --clean --skip=docker"
+      # GoReleaser's sboms: archive block invokes Syft directly. The shared
+      # binary workflow installs GoReleaser and optional cosign, but callers
+      # must provide any additional tools their own configuration requires.
+      pre-cmd: "go install github.com/anchore/syft/cmd/syft@v1.42.3"
