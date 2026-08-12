@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"strconv"
 	"testing"
 	"time"
 
@@ -57,6 +58,100 @@ func TestCollectorsEmitDegradedAndAPIDisabledFixturesPerInstance(t *testing.T) {
 	}
 	if extra.networkStatsCalls != 0 || extra.linesCalls != 0 || extra.configCalls != 0 {
 		t.Fatalf("extra API-off fixture made read calls: stats=%d lines=%d config=%d", extra.networkStatsCalls, extra.linesCalls, extra.configCalls)
+	}
+}
+
+func TestCollectorsEmitHealthyFixturesPerInstance(t *testing.T) {
+	t.Parallel()
+	instances := []struct {
+		name      string
+		rxPackets float64
+		txPackets float64
+		uptime    float64
+	}{
+		{name: "deskie", rxPackets: 382143, txPackets: 67852, uptime: 13293},
+		{name: "extra", rxPackets: 10, txPackets: 0, uptime: 7407},
+	}
+	targets := make([]Target, 0, len(instances))
+	fixtures := make(map[string]*fakeAPI, len(instances))
+	for _, instance := range instances {
+		api := loadHealthyFixture(t, instance.name)
+		fixtures[instance.name] = api
+		targets = append(targets, Target{
+			TenantID: "tenant-a",
+			Device: telemetry.Device{
+				ID: "device-" + instance.name, Name: instance.name, MAC: "000000000000", Model: "Edge E350",
+			},
+			API: api,
+		})
+	}
+	recorder := telemetrytest.New()
+	if err := NewStatus(targets).Collect(context.Background(), recorder.Emitter()); err != nil {
+		t.Fatalf("collect phone status: %v", err)
+	}
+	if err := NewLines(targets).Collect(context.Background(), recorder.Emitter()); err != nil {
+		t.Fatalf("collect phone lines: %v", err)
+	}
+	if err := NewConfig(targets, ConfigAllowlist).Collect(context.Background(), recorder.Emitter()); err != nil {
+		t.Fatalf("collect phone config: %v", err)
+	}
+
+	for _, instance := range instances {
+		if got := len(fixtures[instance.name].lines); got != 4 {
+			t.Fatalf("%s lineInfo records = %d, want 4", instance.name, got)
+		}
+		registrations := make(map[string]struct{})
+		for _, line := range fixtures[instance.name].lines {
+			registrations[line.SIPAddress] = struct{}{}
+		}
+		if got := len(registrations); got != 2 {
+			t.Fatalf("%s logical SIP registrations = %d, want 2", instance.name, got)
+		}
+		assertAPIStateEnum(t, recorder, instance.name, phoneclient.StateOK)
+		assertMetric(t, recorder, semconv.MetricPhoneUptimeSeconds, instance.uptime, map[string]string{semconv.AttrDeviceName: instance.name})
+		assertMetric(t, recorder, semconv.MetricPhoneNetworkPackets, instance.rxPackets, map[string]string{semconv.AttrDeviceName: instance.name, semconv.AttrDirection: "rx"})
+		assertMetric(t, recorder, semconv.MetricPhoneNetworkPackets, instance.txPackets, map[string]string{semconv.AttrDeviceName: instance.name, semconv.AttrDirection: "tx"})
+		for line := 1; line <= 4; line++ {
+			lineNumber := strconv.Itoa(line)
+			registration := 1
+			if line > 2 {
+				registration = 2
+			}
+			registrationNumber := strconv.Itoa(registration)
+			assertMetric(t, recorder, semconv.MetricPhoneLineRegistered, 1, map[string]string{
+				semconv.AttrDeviceName: instance.name,
+				semconv.AttrLine:       lineNumber,
+				semconv.AttrLabel:      "Line " + registrationNumber,
+				semconv.AttrSIPAddress: "line-" + registrationNumber + "@example.test",
+			})
+		}
+		for _, name := range ConfigAllowlist {
+			assertMetric(t, recorder, semconv.MetricPhoneConfigParamSource, 1, map[string]string{
+				semconv.AttrDeviceName: instance.name,
+				semconv.AttrParam:      name,
+				semconv.AttrSource:     fixtures[instance.name].config[name].Source,
+			})
+		}
+	}
+}
+
+func TestStatusEmitsAllFourAPIStatesPerInstance(t *testing.T) {
+	t.Parallel()
+	targets := make([]Target, 0, len(apiStates))
+	for _, state := range apiStates {
+		targets = append(targets, Target{
+			Device: telemetry.Device{ID: "device-" + string(state), Name: string(state)},
+			API: &fakeAPI{state: state, networkStats: phoneclient.NetworkStats{
+				UpTime: "0 day 0:00:00", RxPackets: "0", TxPackets: "0",
+			}},
+		})
+	}
+	recorder := telemetrytest.New()
+	if err := NewStatus(targets).Collect(context.Background(), recorder.Emitter()); err != nil {
+		t.Fatalf("collect phone status: %v", err)
+	}
+	for _, state := range apiStates {
+		assertAPIStateEnum(t, recorder, string(state), state)
 	}
 }
 
@@ -178,6 +273,35 @@ func loadDeskFixture(t *testing.T) *fakeAPI {
 	load("deskie_network_stats.json", &f.networkStats)
 	load("deskie_line_info.json", &f.lines)
 	load("deskie_config_get.json", &f.config)
+	return f
+}
+
+func loadHealthyFixture(t *testing.T, device string) *fakeAPI {
+	t.Helper()
+	load := func(suffix string, into any) {
+		t.Helper()
+		name := "healthy_" + device + "_" + suffix + ".json"
+		body, err := os.ReadFile(filepath.Join("..", "..", "phoneclient", "testdata", name))
+		if err != nil {
+			t.Fatalf("read %s: %v", name, err)
+		}
+		var envelope struct {
+			Data json.RawMessage `json:"data"`
+		}
+		if err := json.Unmarshal(body, &envelope); err != nil {
+			t.Fatalf("decode envelope %s: %v", name, err)
+		}
+		if len(envelope.Data) == 0 || string(envelope.Data) == "null" {
+			t.Fatalf("fixture %s has no data", name)
+		}
+		if err := json.Unmarshal(envelope.Data, into); err != nil {
+			t.Fatalf("decode data %s: %v", name, err)
+		}
+	}
+	f := &fakeAPI{state: phoneclient.StateOK}
+	load("network_stats", &f.networkStats)
+	load("line_info", &f.lines)
+	load("config_get", &f.config)
 	return f
 }
 

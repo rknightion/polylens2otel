@@ -1,0 +1,49 @@
+{
+  "Status": "2000",
+  "data": [
+    {
+      "Label": "Line 1",
+      "LineNumber": "1",
+      "LineType": "private",
+      "Port": "5060",
+      "Protocol": "SIP",
+      "ProxyAddress": "proxy.example.test",
+      "RegistrationStatus": "registered",
+      "SIPAddress": "line-1@example.test",
+      "UserID": "line-1@example.test"
+    },
+    {
+      "Label": "Line 1",
+      "LineNumber": "2",
+      "LineType": "private",
+      "Port": "5060",
+      "Protocol": "SIP",
+      "ProxyAddress": "proxy.example.test",
+      "RegistrationStatus": "registered",
+      "SIPAddress": "line-1@example.test",
+      "UserID": "line-1@example.test"
+    },
+    {
+      "Label": "Line 2",
+      "LineNumber": "3",
+      "LineType": "private",
+      "Port": "5060",
+      "Protocol": "SIP",
+      "ProxyAddress": "proxy.example.test",
+      "RegistrationStatus": "registered",
+      "SIPAddress": "line-2@example.test",
+      "UserID": "line-2@example.test"
+    },
+    {
+      "Label": "Line 2",
+      "LineNumber": "4",
+      "LineType": "private",
+      "Port": "5060",
+      "Protocol": "SIP",
+      "ProxyAddress": "proxy.example.test",
+      "RegistrationStatus": "registered",
+      "SIPAddress": "line-2@example.test",
+      "UserID": "line-2@example.test"
+    }
+  ]
+}

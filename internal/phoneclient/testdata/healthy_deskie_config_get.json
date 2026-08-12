@@ -1,0 +1,29 @@
+{
+  "Status": "2000",
+  "data": {
+    "device.syslog.serverName": {
+      "Source": "device",
+      "Value": "logs.example.test:514"
+    },
+    "reg.1.address": {
+      "Source": "config",
+      "Value": "line-1@example.test"
+    },
+    "reg.1.label": {
+      "Source": "config",
+      "Value": "Line 1"
+    },
+    "reg.2.address": {
+      "Source": "config",
+      "Value": "line-2@example.test"
+    },
+    "softkey.1.enable": {
+      "Source": "default",
+      "Value": "0"
+    },
+    "tcpIpApp.sntp.address": {
+      "Source": "config",
+      "Value": "time.example.test"
+    }
+  }
+}
