@@ -27,7 +27,7 @@ import (
 func TestStaticTargetOverridesLensInternalIP(t *testing.T) {
 	var contacted string
 	resolver, err := phonetarget.New(phonetarget.Config{
-		Targets:  map[string]string{"extra": "10.0.50.175"},
+		Targets:  map[string]string{"extra": "192.0.2.175"},
 		Username: "Polycom",
 		Password: phonetarget.NewSecret("configured-password-canary"),
 		NewClient: func(cfg phoneclient.Config) (phonetarget.API, error) {
@@ -41,16 +41,16 @@ func TestStaticTargetOverridesLensInternalIP(t *testing.T) {
 
 	targets, err := resolver.Resolve(context.Background(), []lensclient.Device{{
 		ID:         "extra",
-		InternalIP: "10.0.0.173",
+		InternalIP: "192.0.2.173",
 		MACAddress: "48:25:67:90:8b:97",
 	}})
 	if err != nil {
 		t.Fatal(err)
 	}
-	if contacted != "https://10.0.50.175" {
-		t.Fatalf("contacted %q, want static target %q", contacted, "https://10.0.50.175")
+	if contacted != "https://192.0.2.175" {
+		t.Fatalf("contacted %q, want static target %q", contacted, "https://192.0.2.175")
 	}
-	if len(targets) != 1 || targets[0].Address != "10.0.50.175" {
+	if len(targets) != 1 || targets[0].Address != "192.0.2.175" {
 		t.Fatalf("targets = %#v, want the static target", targets)
 	}
 }
