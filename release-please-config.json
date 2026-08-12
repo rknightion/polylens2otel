@@ -4,6 +4,7 @@
   "include-component-in-tag": false,
   "packages": {
     ".": {
+      "bump-minor-pre-major": true,
       "changelog-path": "CHANGELOG.md",
       "package-name": "polylens2otel",
       "extra-files": [
