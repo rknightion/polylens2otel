@@ -9,6 +9,8 @@ const (
 	AttrTenantID        = "tenant.id"
 	AttrNetHostIP       = "net.host.ip"
 	AttrVersion         = "version"
+	AttrCommit          = "commit"
+	AttrDate            = "date"
 	AttrBuild           = "build"
 	AttrBuildDate       = "build.date"
 	AttrState           = "state"
