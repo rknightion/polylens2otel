@@ -39,7 +39,7 @@ jobs:
             const routeParameters = ownerInfo.data.type === 'Organization'
               ? { org: owner, package_type: 'container', package_name: packageName }
               : { username: owner, package_type: 'container', package_name: packageName };
-            const versions = await github.paginate(github.request, `GET /${route}`, {
+            const versions = await github.paginate(`GET /${route}`, {
               ...routeParameters,
               per_page: 100,
             });
