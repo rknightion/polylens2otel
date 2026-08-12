@@ -27,4 +27,4 @@ jobs:
       release-tag: ${{ inputs.release_tag }}
       install-cosign: true
       goreleaser-args: "release --clean --skip=docker"
-      pre-cmd: "go install github.com/anchore/syft/cmd/syft@v1.42.3"
+      pre-cmd: "bash .github/scripts/install-syft.sh"

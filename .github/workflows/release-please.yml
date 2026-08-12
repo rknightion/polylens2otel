@@ -83,4 +83,4 @@ jobs:
       # GoReleaser's sboms: archive block invokes Syft directly. The shared
       # binary workflow installs GoReleaser and optional cosign, but callers
       # must provide any additional tools their own configuration requires.
-      pre-cmd: "go install github.com/anchore/syft/cmd/syft@v1.42.3"
+      pre-cmd: "bash .github/scripts/install-syft.sh"
