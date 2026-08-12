@@ -37,6 +37,14 @@ func TestDefaultIncludesWave3PhoneCollectorIntervals(t *testing.T) {
 	}
 }
 
+func TestDefaultUsesLensPolicyForPhoneAuthentication(t *testing.T) {
+	t.Parallel()
+
+	if !Default().Phone.Auth.FromLensPolicy {
+		t.Fatal("phone.auth.from_lens_policy = false; want true")
+	}
+}
+
 func TestLoadRejectsSecretsInYAML(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "config.yaml")
 	secretYAML := "lens:\n  client_" + "secret: \"canary\"\n"

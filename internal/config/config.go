@@ -143,7 +143,7 @@ func Default() Config {
 		Phone: PhoneConfig{
 			Enabled: true, Targets: map[string]string{}, RequestTimeout: 15 * time.Second,
 			ConfigParams: []string{"reg.1.address", "reg.2.address", "reg.1.label", "device.syslog.serverName", "tcpIpApp.sntp.address", "softkey.1.enable"},
-			Auth:         PhoneAuthConfig{Username: "Polycom"},
+			Auth:         PhoneAuthConfig{Username: "Polycom", FromLensPolicy: true},
 		},
 		Collectors: CollectorConfig{
 			LensDevices: time.Minute, LensActiveCalls: time.Minute, LensFirmware: 24 * time.Hour,
@@ -231,6 +231,9 @@ func (c Config) Validate() error {
 	}
 	if c.OTLP.Protocol != "http" && c.OTLP.Protocol != "grpc" {
 		return fmt.Errorf("otlp.protocol must be http or grpc")
+	}
+	if err := validatePhoneConfigParams(c.Phone.ConfigParams); err != nil {
+		return err
 	}
 	return nil
 }

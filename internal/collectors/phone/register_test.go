@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"slices"
 	"strconv"
 	"testing"
 	"time"
@@ -191,16 +192,24 @@ func TestRegisterUsesFrozenPhoneCollectors(t *testing.T) {
 	t.Parallel()
 	registry := collector.NewRegistry()
 	cfg := config.Default()
+	cfg.Collectors.PhoneCallLogs = 7 * time.Minute
+	cfg.Collectors.PhoneNetworkInfo = 11 * time.Minute
 	Register(collector.Deps{
 		Config:   &cfg,
 		Registry: registry,
-		Services: map[string]any{ServiceTargets: []Target{{Device: telemetry.Device{ID: "deskie"}, API: &fakeAPI{state: phoneclient.StateAPIDisabled}}}},
+		Services: map[string]any{ServiceTargets: []Target{{
+			Device: telemetry.Device{ID: "deskie"}, API: &fakeAPI{state: phoneclient.StateAPIDisabled},
+			CallLogsInterval: cfg.Collectors.PhoneCallLogs, NetworkInfoInterval: cfg.Collectors.PhoneNetworkInfo,
+		}}},
 	})
 	entries := registry.Entries()
-	if len(entries) != 3 {
-		t.Fatalf("registered collectors = %d; want 3", len(entries))
+	if len(entries) != 5 {
+		t.Fatalf("registered collectors = %d; want 5", len(entries))
 	}
-	want := map[string]time.Duration{StatusID: time.Minute, LinesID: time.Minute, ConfigID: 5 * time.Minute}
+	want := map[string]time.Duration{
+		StatusID: time.Minute, LinesID: time.Minute, ConfigID: 5 * time.Minute,
+		callLogsID: 7 * time.Minute, NetworkInfoID: 11 * time.Minute,
+	}
 	for _, entry := range entries {
 		interval, ok := want[entry.ID()]
 		if !ok {
@@ -213,6 +222,46 @@ func TestRegisterUsesFrozenPhoneCollectors(t *testing.T) {
 	}
 	if len(want) != 0 {
 		t.Fatalf("missing collector IDs: %#v", want)
+	}
+}
+
+func TestRegisterConfigCollectorUsesConfiguredParamAllowlist(t *testing.T) {
+	t.Parallel()
+	params := []string{"reg.7.address", "feature.example.enabled"}
+	api := &fakeAPI{state: phoneclient.StateOK, config: map[string]phoneclient.ConfigParam{
+		params[0]: {Source: "config"},
+		params[1]: {Source: "default"},
+	}}
+	cfg := config.Default()
+	cfg.Phone.ConfigParams = params
+	registry := collector.NewRegistry()
+	Register(collector.Deps{
+		Config: &cfg, Registry: registry,
+		Services: map[string]any{ServiceTargets: []Target{{Device: telemetry.Device{ID: "deskie", Name: "deskie"}, API: api}}},
+	})
+	var configEntry collector.Collector
+	for _, entry := range registry.Entries() {
+		if entry.ID() == ConfigID {
+			configEntry = entry
+			break
+		}
+	}
+	if configEntry == nil {
+		t.Fatal("config collector was not registered")
+	}
+	recorder := telemetrytest.New()
+	if err := configEntry.Collect(context.Background(), recorder.Emitter()); err != nil {
+		t.Fatalf("collect configured params: %v", err)
+	}
+	if !slices.Equal(api.configParams, params) {
+		t.Fatalf("ConfigGet params = %#v; want %#v", api.configParams, params)
+	}
+	metrics := recorder.Metrics()
+	if len(metrics) != len(params) {
+		t.Fatalf("config param metrics = %#v; want exactly %d", metrics, len(params))
+	}
+	for _, name := range params {
+		assertMetric(t, recorder, semconv.MetricPhoneConfigParamSource, 1, map[string]string{semconv.AttrParam: name})
 	}
 }
 
@@ -237,6 +286,7 @@ type fakeAPI struct {
 	networkStatsCalls int
 	linesCalls        int
 	configCalls       int
+	configParams      []string
 }
 
 func (f *fakeAPI) Probe(context.Context) (phoneclient.State, error) { return f.state, nil }
@@ -254,8 +304,9 @@ func (f *fakeAPI) LineInfo(context.Context) ([]phoneclient.Line, error) {
 	f.linesCalls++
 	return f.lines, nil
 }
-func (f *fakeAPI) ConfigGet(_ context.Context, _ []string) (map[string]phoneclient.ConfigParam, []string, error) {
+func (f *fakeAPI) ConfigGet(_ context.Context, params []string) (map[string]phoneclient.ConfigParam, []string, error) {
 	f.configCalls++
+	f.configParams = append([]string(nil), params...)
 	return f.config, nil, nil
 }
 

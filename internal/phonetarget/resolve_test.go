@@ -311,6 +311,81 @@ func TestPolicyFailureFallsBackWithoutLeakingCredential(t *testing.T) {
 	}
 }
 
+func TestLensPolicyFallbackPathsUseConfiguredPassword(t *testing.T) {
+	const fallback = "configured-password-canary"
+	tests := []struct {
+		name      string
+		responses []string
+		errors    []error
+	}{
+		{
+			name:      "zero winning sources",
+			responses: []string{`{"getDeviceParametersExtended":[]}`},
+		},
+		{
+			name: "ambiguous winning sources",
+			responses: []string{`{"getDeviceParametersExtended":[
+				{"name":"device.auth.localAdminPassword","policyDeploymentScope":"DEVICE"},
+				{"name":"device.auth.localAdminPassword","policyDeploymentScope":"GLOBAL"}
+			]}`},
+		},
+		{
+			name:      "unsupported scope",
+			responses: []string{`{"getDeviceParametersExtended":[{"name":"device.auth.localAdminPassword","policyDeploymentScope":"UNKNOWN"}]}`},
+		},
+		{
+			name: "failed policy read",
+			responses: []string{
+				`{"getDeviceParametersExtended":[{"name":"device.auth.localAdminPassword","policyDeploymentScope":"DEVICE"}]}`,
+				`{"getPolicies":[{"policyId":"winning-policy","configurationAttributes":[{"name":"device.auth.localAdminPassword"}]}]}`,
+			},
+			errors: []error{nil, nil, errors.New("policy read failed")},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			query := &stubLensQuery{responses: tt.responses, errors: tt.errors}
+			policy, err := phonetarget.NewLensPolicySource(query)
+			if err != nil {
+				t.Fatal(err)
+			}
+			assertConfiguredPasswordFallback(t, policy, fallback)
+		})
+	}
+}
+
+func TestMissingLensPolicySourceUsesConfiguredPassword(t *testing.T) {
+	assertConfiguredPasswordFallback(t, nil, "configured-password-canary")
+}
+
+func assertConfiguredPasswordFallback(t *testing.T, policy phonetarget.PolicyPasswordSource, fallback string) {
+	t.Helper()
+	recorder := telemetrytest.New()
+	var usedPassword string
+	resolver, err := phonetarget.New(phonetarget.Config{
+		Password:       phonetarget.NewSecret(fallback),
+		FromLensPolicy: true,
+		NewClient: func(cfg phoneclient.Config) (phonetarget.API, error) {
+			usedPassword = cfg.Password
+			return stubPhone{state: phoneclient.StateOK}, nil
+		},
+	}, policy, recorder.Emitter())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := resolver.Resolve(context.Background(), []lensclient.Device{{
+		TenantID: "tenant", ID: "device", InternalIP: "192.0.2.139", MACAddress: "48:25:67:90:8b:97",
+	}}); err != nil {
+		t.Fatal(err)
+	}
+	if usedPassword != fallback {
+		t.Fatalf("phone used password %q, want configured fallback", usedPassword)
+	}
+	if !recorder.HasMetric(semconv.MetricAPIUnexpected, map[string]string{semconv.AttrDeviceID: "device"}, 1) {
+		t.Fatal("missing api.unexpected metric for Lens policy fallback")
+	}
+}
+
 type stubPhone struct {
 	state phoneclient.State
 	err   error
@@ -326,14 +401,18 @@ type stubLensQuery struct {
 	responses []string
 	documents []string
 	variables []any
-	err       error
+	errors    []error
 }
 
 func (s *stubLensQuery) Query(_ context.Context, document string, variables, out any) error {
 	s.documents = append(s.documents, document)
 	s.variables = append(s.variables, variables)
-	if s.err != nil {
-		return s.err
+	if len(s.errors) != 0 {
+		err := s.errors[0]
+		s.errors = s.errors[1:]
+		if err != nil {
+			return err
+		}
 	}
 	if len(s.responses) == 0 {
 		return errors.New("unexpected Lens query")
