@@ -3,7 +3,7 @@ module github.com/rknightion/polylens2otel
 go 1.26.5
 
 require (
-	github.com/coder/websocket v1.8.14
+	github.com/coder/websocket v1.8.15
 	github.com/go-viper/mapstructure/v2 v2.5.0
 	github.com/grafana/pyroscope-go v1.4.1
 	github.com/knadh/koanf/parsers/yaml v1.1.1
