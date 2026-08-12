@@ -2,7 +2,6 @@ package collector
 
 import (
 	"context"
-	"errors"
 	"testing"
 	"time"
 
@@ -16,14 +15,6 @@ func (panicCollector) ID() string              { return "panic" }
 func (panicCollector) Interval() time.Duration { return time.Minute }
 func (panicCollector) Collect(context.Context, telemetry.Emitter) error {
 	panic("boom")
-}
-
-type errorCollector struct{}
-
-func (errorCollector) ID() string              { return "error" }
-func (errorCollector) Interval() time.Duration { return time.Minute }
-func (errorCollector) Collect(context.Context, telemetry.Emitter) error {
-	return errors.New("failed")
 }
 
 func TestRunOnceRecoversPanicsAndRecordsAvailability(t *testing.T) {

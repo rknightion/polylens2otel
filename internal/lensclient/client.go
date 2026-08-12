@@ -96,7 +96,7 @@ func New(cfg Config) (*Client, error) {
 // rejected locally before a token is minted or a network request is made.
 func (c *Client) Query(ctx context.Context, document string, variables any, out any) error {
 	if mutationKeyword.MatchString(document) {
-		return errors.New("Lens mutations are forbidden by this read-only client")
+		return errors.New("lens mutations are forbidden by this read-only client")
 	}
 	token, err := c.accessToken(ctx)
 	if err != nil {
@@ -121,7 +121,7 @@ func (c *Client) Query(ctx context.Context, document string, variables any, out 
 		return fmt.Errorf("decode GraphQL response: %w", err)
 	}
 	if len(envelope.Errors) > 0 && string(envelope.Errors) != "null" && string(envelope.Errors) != "[]" {
-		return fmt.Errorf("Lens GraphQL errors: %s", c.redact(string(envelope.Errors), token))
+		return fmt.Errorf("lens GraphQL errors: %s", c.redact(string(envelope.Errors), token))
 	}
 	if out != nil && len(envelope.Data) > 0 && string(envelope.Data) != "null" {
 		if err := json.Unmarshal(envelope.Data, out); err != nil {

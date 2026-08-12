@@ -37,6 +37,7 @@ var secrets = map[string]bool{
 	"profiling.pyroscope.basic_auth_password": true,
 }
 
+//nolint:gosec // Public documentation strings describe secret-bearing settings; they contain no values.
 var comments = map[string]string{
 	"log.level":                               "Application log level.",
 	"log.format":                              "Application log encoding.",
@@ -116,10 +117,11 @@ func main() {
 			}
 			continue
 		}
-		if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+		// Generated documentation is intentionally world-readable in the public repository.
+		if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil { //nolint:gosec
 			fatal(err)
 		}
-		if err := os.WriteFile(path, want, 0o644); err != nil {
+		if err := os.WriteFile(path, want, 0o644); err != nil { //nolint:gosec
 			fatal(err)
 		}
 	}

@@ -44,8 +44,8 @@ const (
 	MetricHTTP4xx                            = "polylens2otel.http_4xx"
 	MetricHTTP5xx                            = "polylens2otel.http_5xx"
 	MetricAPIUnexpected                      = "polylens2otel.api.unexpected"
-	MetricAuthTokenRefresh                   = "polylens2otel.auth.token.refresh"
-	MetricAuthTokenExpiresSeconds            = "polylens2otel.auth.token.expires_seconds"
+	MetricAuthTokenRefresh                   = "polylens2otel.auth.token.refresh"         //nolint:gosec // Metric name, not a credential.
+	MetricAuthTokenExpiresSeconds            = "polylens2otel.auth.token.expires_seconds" //nolint:gosec // Metric name, not a credential.
 	MetricStreamReconnects                   = "polylens2otel.stream.reconnects"
 	MetricStreamMessages                     = "polylens2otel.stream.messages"
 	MetricStreamLastMessageSeconds           = "polylens2otel.stream.last_message_seconds"

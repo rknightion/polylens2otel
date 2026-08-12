@@ -125,6 +125,9 @@ type CardinalityConfig struct {
 }
 
 func Default() Config {
+	// ClientSecret and the other credential fields intentionally remain empty;
+	// configuration only supplies their public endpoint defaults.
+	//nolint:gosec // G101 mistakes the LensConfig field names for embedded credentials.
 	return Config{
 		Log: LogConfig{Level: "info", Format: "json"},
 		Lens: LensConfig{

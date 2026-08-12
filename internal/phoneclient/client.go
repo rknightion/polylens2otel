@@ -123,7 +123,10 @@ func New(cfg Config) (*Client, error) {
 		return nil, err
 	}
 	tlsConfig := &tls.Config{
-		InsecureSkipVerify: true, // Verification below intentionally omits DNS-name validation for IP targets.
+		// The phones use a private issuing CA and IP targets. VerifyConnection below
+		// always enforces certificate-CN identity before any credential is sent and,
+		// when configured, verifies the chain without DNS-name validation.
+		InsecureSkipVerify: true, //nolint:gosec // Identity verification is mandatory in VerifyConnection.
 		VerifyConnection: func(cs tls.ConnectionState) error {
 			if len(cs.PeerCertificates) == 0 {
 				return errors.New("phone presented no TLS certificate")
@@ -255,7 +258,9 @@ func (c *Client) authenticatedRequest(ctx context.Context, method, endpoint stri
 	if response.StatusCode != http.StatusUnauthorized {
 		return response, nil
 	}
-	response.Body.Close()
+	if err := response.Body.Close(); err != nil {
+		return nil, fmt.Errorf("close unauthenticated phone response: %w", err)
+	}
 	return c.request(ctx, method, endpoint, body, true)
 }
 
@@ -283,7 +288,9 @@ func (c *Client) request(ctx context.Context, method, endpoint string, body []by
 		return challengeResponse, nil
 	}
 	challenge := challengeResponse.Header.Get("WWW-Authenticate")
-	challengeResponse.Body.Close()
+	if err := challengeResponse.Body.Close(); err != nil {
+		return nil, fmt.Errorf("close phone digest challenge response: %w", err)
+	}
 	authorization, err := digestAuthorization(challenge, request, c.username, c.password)
 	if err != nil {
 		return nil, err

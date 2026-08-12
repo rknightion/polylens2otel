@@ -8,7 +8,7 @@ import (
 	"github.com/rknightion/polylens2otel/internal/collectors/selfobs"
 )
 
-func registerAll(d collector.Deps) {
+func registerAll(d collector.Deps) { //nolint:unused // Frozen L0 seam; L14 wires it into main.
 	lens.Register(d)
 	lenscdr.Register(d)
 	phone.Register(d)

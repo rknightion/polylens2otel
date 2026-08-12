@@ -67,7 +67,14 @@ func (r *Recorder) WithTenant(id string) telemetry.Emitter {
 func (r *Recorder) WithDevice(d telemetry.Device) telemetry.Emitter {
 	c := *r
 	c.base = append([]telemetry.Attr(nil), r.base...)
-	for _, a := range []telemetry.Attr{{semconv.AttrDeviceID, d.ID}, {semconv.AttrDeviceName, d.Name}, {semconv.AttrDeviceMAC, d.MAC}, {semconv.AttrDeviceModel, d.Model}, {semconv.AttrSiteName, d.Site}, {semconv.AttrNetHostIP, d.IP}} {
+	for _, a := range []telemetry.Attr{
+		{Key: semconv.AttrDeviceID, Value: d.ID},
+		{Key: semconv.AttrDeviceName, Value: d.Name},
+		{Key: semconv.AttrDeviceMAC, Value: d.MAC},
+		{Key: semconv.AttrDeviceModel, Value: d.Model},
+		{Key: semconv.AttrSiteName, Value: d.Site},
+		{Key: semconv.AttrNetHostIP, Value: d.IP},
+	} {
 		if a.Value != "" {
 			c.base = append(c.base, a)
 		}

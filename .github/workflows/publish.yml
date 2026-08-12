@@ -24,6 +24,7 @@ permissions:
 
 jobs:
   image:
+    if: ${{ !github.event.repository.private }}
     permissions:
       contents: write
       packages: write
@@ -35,3 +36,246 @@ jobs:
       release-tag: ${{ inputs.release_tag }}
       dockerfile: Dockerfile
       helm-chart-path: charts/polylens2otel
+
+  # GitHub build attestations and code scanning are unavailable for a user-owned
+  # private repository. Keep the public path on the fleet reusable above, while
+  # publishing the same native multi-arch image, signature, SBOM and chart here
+  # until the separately-authorized visibility change in Wave 2.
+  private-build:
+    if: ${{ github.event.repository.private }}
+    name: private-compatible build (${{ matrix.platform }})
+    runs-on: ${{ matrix.runner }}
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: linux/amd64
+            pair: linux-amd64
+            runner: ubuntu-24.04
+          - platform: linux/arm64
+            pair: linux-arm64
+            runner: ubuntu-24.04-arm
+    steps:
+      - name: Harden the runner (audit egress)
+        uses: step-security/harden-runner@9af89fc71515a100421586dfdb3dc9c984fbf411 # v2.19.4
+        with:
+          egress-policy: audit
+      - name: Checkout repository
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          ref: ${{ inputs.release_tag || github.ref }}
+          persist-credentials: false
+      - name: Compute version
+        env:
+          RELEASE_TAG: ${{ inputs.release_tag }}
+        run: |
+          if [ -n "${RELEASE_TAG}" ]; then version="${RELEASE_TAG#v}"; else version="$(git rev-parse --short HEAD)"; fi
+          echo "COMPUTED_VERSION=${version}" >> "$GITHUB_ENV"
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c # v4.2.0
+      - name: Log in to GHCR
+        uses: docker/login-action@af1e73f918a031802d376d3c8bbc3fe56130a9b0 # v4.4.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build and push by digest
+        id: build
+        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
+        with:
+          context: .
+          file: Dockerfile
+          platforms: ${{ matrix.platform }}
+          outputs: type=image,name=ghcr.io/${{ github.repository }},push-by-digest=true,name-canonical=true,push=true
+          provenance: false
+          sbom: false
+          build-args: VERSION=${{ env.COMPUTED_VERSION }}
+      - name: Export digest
+        env:
+          BUILD_DIGEST: ${{ steps.build.outputs.digest }}
+        run: |
+          mkdir -p "${{ runner.temp }}/digests"
+          touch "${{ runner.temp }}/digests/${BUILD_DIGEST#sha256:}"
+      - name: Upload digest
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: digests-${{ matrix.pair }}
+          path: ${{ runner.temp }}/digests/*
+          if-no-files-found: error
+          retention-days: 1
+
+  private-publish:
+    if: ${{ github.event.repository.private }}
+    name: private-compatible merge + sign + sbom
+    needs: private-build
+    runs-on: ubuntu-24.04
+    permissions:
+      actions: read
+      contents: write
+      id-token: write
+      packages: write
+    outputs:
+      digest: ${{ steps.digest.outputs.digest }}
+    steps:
+      - name: Harden the runner (audit egress)
+        uses: step-security/harden-runner@9af89fc71515a100421586dfdb3dc9c984fbf411 # v2.19.4
+        with:
+          egress-policy: audit
+      - name: Download digests
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          path: ${{ runner.temp }}/digests
+          pattern: digests-*
+          merge-multiple: true
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c # v4.2.0
+      - name: Install cosign
+        uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6 # v4.1.2
+      - name: Install Syft
+        uses: anchore/sbom-action/download-syft@e22c389904149dbc22b58101806040fa8d37a610 # v0.24.0
+      - name: Extract Docker metadata
+        id: meta
+        uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6.2.0
+        with:
+          images: ghcr.io/${{ github.repository }}
+          tags: |
+            type=ref,event=branch
+            type=sha,prefix={{branch}}-,enable={{is_default_branch}}
+            type=semver,pattern={{version}},value=${{ inputs.release_tag }},enable=${{ inputs.release_tag != '' }}
+            type=semver,pattern={{major}}.{{minor}},value=${{ inputs.release_tag }},enable=${{ inputs.release_tag != '' }}
+            type=semver,pattern={{major}},value=${{ inputs.release_tag }},enable=${{ inputs.release_tag != '' }}
+            type=raw,value=latest,enable=${{ inputs.release_tag != '' && !contains(inputs.release_tag, '-') }}
+      - name: Log in to GHCR
+        uses: docker/login-action@af1e73f918a031802d376d3c8bbc3fe56130a9b0 # v4.4.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Create manifest list and push
+        working-directory: ${{ runner.temp }}/digests
+        env:
+          IMAGE: ghcr.io/${{ github.repository }}
+        run: |
+          # shellcheck disable=SC2046
+          docker buildx imagetools create \
+            $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
+            $(printf "${IMAGE}@sha256:%s " *)
+      - name: Inspect image and capture digest
+        id: digest
+        env:
+          IMAGE: ghcr.io/${{ github.repository }}
+          VERSION: ${{ steps.meta.outputs.version }}
+        run: |
+          digest=$(docker buildx imagetools inspect "${IMAGE}:${VERSION}" --format '{{json .Manifest.Digest}}' | tr -d '"')
+          echo "digest=${digest}" >> "$GITHUB_OUTPUT"
+      - name: Sign the published image
+        env:
+          TAGS: ${{ steps.meta.outputs.tags }}
+          DIGEST: ${{ steps.digest.outputs.digest }}
+        run: echo "${TAGS}" | xargs -I {} cosign sign --yes "{}@${DIGEST}"
+      - name: Generate SBOMs
+        env:
+          IMAGE: ghcr.io/${{ github.repository }}
+          DIGEST: ${{ steps.digest.outputs.digest }}
+        run: |
+          syft "${IMAGE}@${DIGEST}" --output spdx-json=polylens2otel.spdx.json
+          syft "${IMAGE}@${DIGEST}" --output cyclonedx-json=polylens2otel.cdx.json
+      - name: Retain SBOMs
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: polylens2otel-sboms
+          path: polylens2otel.*.json
+          retention-days: 5
+      - name: Attach SBOMs to the release
+        if: inputs.release_tag != ''
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ inputs.release_tag }}
+        run: gh release upload "${RELEASE_TAG}" polylens2otel.spdx.json polylens2otel.cdx.json --clobber
+      - name: Run Trivy image scan
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: ghcr.io/${{ github.repository }}@${{ steps.digest.outputs.digest }}
+          format: sarif
+          output: trivy-image.sarif
+          severity: CRITICAL,HIGH
+      - name: Retain Trivy image SARIF
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: trivy-image-sarif
+          path: trivy-image.sarif
+          retention-days: 5
+
+  private-helm:
+    if: ${{ github.event.repository.private }}
+    name: private-compatible Helm publish
+    needs: private-publish
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+      id-token: write
+      packages: write
+    steps:
+      - name: Harden the runner (audit egress)
+        uses: step-security/harden-runner@9af89fc71515a100421586dfdb3dc9c984fbf411 # v2.19.4
+        with:
+          egress-policy: audit
+      - name: Checkout repository
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          ref: ${{ inputs.release_tag || github.ref }}
+          persist-credentials: false
+      - name: Set up Helm
+        uses: azure/setup-helm@9bc31f4ebc9c6b171d7bfbaa5d006ae7abdb4310 # v5.0.1
+      - name: Install cosign
+        uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6 # v4.1.2
+      - name: Log in to GHCR for Helm
+        env:
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ACTOR: ${{ github.actor }}
+        run: echo "${GHCR_TOKEN}" | helm registry login ghcr.io -u "${ACTOR}" --password-stdin
+      - name: Log in to GHCR for cosign
+        uses: docker/login-action@af1e73f918a031802d376d3c8bbc3fe56130a9b0 # v4.4.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Package and push chart
+        id: chart
+        env:
+          RELEASE_TAG: ${{ inputs.release_tag }}
+          SHORT_SHA: ${{ github.sha }}
+        run: |
+          if [ -n "${RELEASE_TAG}" ]; then
+            version="${RELEASE_TAG#v}"
+            appversion="${RELEASE_TAG#v}"
+          else
+            short="${SHORT_SHA:0:12}"
+            version="0.0.0-main.t$(date +%s).${short}"
+            appversion="main-${short}"
+          fi
+          helm package charts/polylens2otel --version "${version}" --app-version "${appversion}" --destination /tmp/helm
+          pkg=$(find /tmp/helm -maxdepth 1 -name '*.tgz' -print -quit)
+          echo "pkg=${pkg}" >> "$GITHUB_OUTPUT"
+          push_out=$(helm push "${pkg}" "oci://ghcr.io/${GITHUB_REPOSITORY_OWNER}/charts" 2>&1)
+          echo "${push_out}"
+          digest=$(echo "${push_out}" | awk '/Digest:/ {print $2}')
+          echo "digest=${digest}" >> "$GITHUB_OUTPUT"
+      - name: Sign the chart
+        if: steps.chart.outputs.digest != ''
+        env:
+          DIGEST: ${{ steps.chart.outputs.digest }}
+        run: cosign sign --yes "ghcr.io/${GITHUB_REPOSITORY_OWNER}/charts/polylens2otel@${DIGEST}"
+      - name: Attach chart to the release
+        if: inputs.release_tag != ''
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ inputs.release_tag }}
+          PKG: ${{ steps.chart.outputs.pkg }}
+        run: gh release upload "${RELEASE_TAG}" "${PKG}" --clobber
