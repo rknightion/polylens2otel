@@ -39,8 +39,8 @@ func TestCollectorsEmitDegradedAndAPIDisabledFixturesPerInstance(t *testing.T) {
 
 	assertMetric(t, recorder, semconv.MetricPhoneAPIState, 1, map[string]string{semconv.AttrTenantID: "tenant-a", semconv.AttrDeviceName: "deskie", semconv.AttrState: string(phoneclient.StateOK)})
 	assertMetric(t, recorder, semconv.MetricPhoneAPIState, 1, map[string]string{semconv.AttrDeviceName: "extra", semconv.AttrState: string(phoneclient.StateAPIDisabled)})
-	assertExactlyOneAPIState(t, recorder, "deskie", phoneclient.StateOK)
-	assertExactlyOneAPIState(t, recorder, "extra", phoneclient.StateAPIDisabled)
+	assertAPIStateEnum(t, recorder, "deskie", phoneclient.StateOK)
+	assertAPIStateEnum(t, recorder, "extra", phoneclient.StateAPIDisabled)
 	assertMetric(t, recorder, semconv.MetricPhoneUptimeSeconds, 8760, map[string]string{semconv.AttrDeviceName: "deskie"})
 	assertMetric(t, recorder, semconv.MetricPhoneNetworkPackets, 174384, map[string]string{semconv.AttrDeviceName: "deskie", semconv.AttrDirection: "rx"})
 	assertMetric(t, recorder, semconv.MetricPhoneNetworkPackets, 3624, map[string]string{semconv.AttrDeviceName: "deskie", semconv.AttrDirection: "tx"})
@@ -79,6 +79,17 @@ func TestLinesCountsOneLogicalRegistrationFromDuplicateAPIRecords(t *testing.T) 
 	if len(recorder.Metrics()) != 2 {
 		t.Fatalf("metrics = %#v; want one lines_total and one logical line", recorder.Metrics())
 	}
+}
+
+func TestStatusEmitsFullAPIStateEnum(t *testing.T) {
+	t.Parallel()
+	recorder := telemetrytest.New()
+	state := phoneclient.StateAuthFailed
+	if err := NewStatus([]Target{{Device: telemetry.Device{ID: "deskie", Name: "deskie"}, API: &fakeAPI{state: state}}}).Collect(context.Background(), recorder.Emitter()); err != nil {
+		t.Fatalf("collect phone status: %v", err)
+	}
+
+	assertAPIStateEnum(t, recorder, "deskie", state)
 }
 
 func TestRegisterUsesFrozenPhoneCollectors(t *testing.T) {
@@ -177,18 +188,16 @@ func assertMetric(t *testing.T, recorder *telemetrytest.Recorder, name string, v
 	}
 }
 
-func assertExactlyOneAPIState(t *testing.T, recorder *telemetrytest.Recorder, device string, want phoneclient.State) {
+func assertAPIStateEnum(t *testing.T, recorder *telemetrytest.Recorder, device string, current phoneclient.State) {
 	t.Helper()
-	count := 0
-	for _, metric := range recorder.Metrics() {
-		if metric.Name == semconv.MetricPhoneAPIState && metric.Attrs[semconv.AttrDeviceName] == device {
-			count++
-			if metric.Value != 1 || metric.Attrs[semconv.AttrState] != string(want) {
-				t.Fatalf("API state for %s = %#v; want state=%q value=1", device, metric, want)
-			}
+	for _, state := range apiStates {
+		want := 0.0
+		if state == current {
+			want = 1
 		}
-	}
-	if count != 1 {
-		t.Fatalf("API states for %s = %d; want exactly one", device, count)
+		assertMetric(t, recorder, semconv.MetricPhoneAPIState, want, map[string]string{
+			semconv.AttrDeviceName: device,
+			semconv.AttrState:      string(state),
+		})
 	}
 }

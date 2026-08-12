@@ -20,6 +20,13 @@ const (
 	ConfigID = "phone.config"
 )
 
+var apiStates = []phoneclient.State{
+	phoneclient.StateOK,
+	phoneclient.StateAPIDisabled,
+	phoneclient.StateAuthFailed,
+	phoneclient.StateUnreachable,
+}
+
 // ConfigAllowlist is the narrow set of configuration sources that identifies
 // provisioning drift without exposing the phone's complete configuration.
 var ConfigAllowlist = []string{
@@ -67,8 +74,14 @@ func (c statusCollector) Collect(ctx context.Context, emitter telemetry.Emitter)
 		if err != nil || !validState(state) {
 			state = phoneclient.StateUnreachable
 		}
-		if err := emitGauge(ctx, targetEmitter(emitter, target), semconv.MetricPhoneAPIState, 1, telemetry.Attr{Key: semconv.AttrState, Value: string(state)}); err != nil {
-			return err
+		for _, candidate := range apiStates {
+			value := 0.0
+			if candidate == state {
+				value = 1
+			}
+			if err := emitGauge(ctx, targetEmitter(emitter, target), semconv.MetricPhoneAPIState, value, telemetry.Attr{Key: semconv.AttrState, Value: string(candidate)}); err != nil {
+				return err
+			}
 		}
 		if state != phoneclient.StateOK {
 			continue

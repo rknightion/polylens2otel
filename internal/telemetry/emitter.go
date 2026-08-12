@@ -107,7 +107,7 @@ func (e *otelEmitter) WithTenant(id string) Emitter {
 func (e *otelEmitter) WithDevice(d Device) Emitter {
 	c := *e
 	c.base = append([]Attr(nil), e.base...)
-	for _, a := range []Attr{{semconv.AttrDeviceID, d.ID}, {semconv.AttrDeviceName, d.Name}, {semconv.AttrDeviceMAC, d.MAC}, {semconv.AttrDeviceModel, d.Model}, {semconv.AttrSiteName, d.Site}, {semconv.AttrNetHostIP, d.IP}} {
+	for _, a := range []Attr{{semconv.AttrDeviceID, d.ID}, {semconv.AttrDeviceName, d.Name}, {semconv.AttrDeviceMAC, d.MAC}, {semconv.AttrDeviceModel, d.Model}, {semconv.AttrSiteName, d.Site}} {
 		if a.Value != "" {
 			c.base = append(c.base, a)
 		}
