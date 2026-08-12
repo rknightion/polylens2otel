@@ -5,7 +5,6 @@
   "packages": {
     ".": {
       "bump-minor-pre-major": true,
-      "release-as": "0.1.0",
       "changelog-path": "CHANGELOG.md",
       "package-name": "polylens2otel",
       "extra-files": [
