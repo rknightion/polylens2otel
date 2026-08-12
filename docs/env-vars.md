@@ -40,10 +40,10 @@ Configuration precedence is defaults, YAML, then `PL2O_` environment variables. 
 | `otlp.grafana_cloud.token` | `string` | `` | `PL2O_OTLP__GRAFANA_CLOUD__TOKEN` | Yes (environment only) | Required | Grafana Cloud access token; supply only through the environment. |
 | `otlp.insecure` | `bool` | `false` | `PL2O_OTLP__INSECURE` | No | Optional | Allow an insecure OTLP transport. |
 | `otlp.protocol` | `string` | `http` | `PL2O_OTLP__PROTOCOL` | No | Optional | OTLP transport protocol; validation permits http or grpc. |
-| `phone.auth.from_lens_policy` | `bool` | `false` | `PL2O_PHONE__AUTH__FROM_LENS_POLICY` | No | Optional | Use phone credentials from Lens policy where supported. |
+| `phone.auth.from_lens_policy` | `bool` | `true` | `PL2O_PHONE__AUTH__FROM_LENS_POLICY` | No | Optional | Prefer credentials from the selected Lens policy; defaults to true. Set false to use only the configured password. |
 | `phone.auth.password` | `string` | `` | `PL2O_PHONE__AUTH__PASSWORD` | Yes (environment only) | Required when phone.enabled is true | Digest authentication password; supply only through the environment when phone collection is enabled. |
 | `phone.auth.username` | `string` | `Polycom` | `PL2O_PHONE__AUTH__USERNAME` | No | Optional | Digest authentication username; Polycom is the default. |
-| `phone.config_params` | `[]string` | `[reg.1.address, reg.2.address, reg.1.label, device.syslog.serverName, tcpIpApp.sntp.address, softkey.1.enable]` | `PL2O_PHONE__CONFIG_PARAMS` | No | Optional | Read-only phone configuration parameters requested by the phone config collector. |
+| `phone.config_params` | `[]string` | `[reg.1.address, reg.2.address, reg.1.label, device.syslog.serverName, tcpIpApp.sntp.address, softkey.1.enable]` | `PL2O_PHONE__CONFIG_PARAMS` | No | Optional | Read-only phone configuration parameters requested by the phone config collector; at most 50 to bound the phone response and resulting metric-series count. |
 | `phone.enabled` | `bool` | `true` | `PL2O_PHONE__ENABLED` | No | Optional | Enable phone REST collectors. When enabled, phone.auth.password is required. |
 | `phone.request_timeout` | `duration` | `15s` | `PL2O_PHONE__REQUEST_TIMEOUT` | No | Optional | Timeout for an individual phone REST request. |
 | `phone.targets` | `map[string]string` | `{}` | `PL2O_PHONE__TARGETS` | No | Optional | Static per-device targets. Each <device-id> overrides that device's Lens internalIp; discovery never scans. |

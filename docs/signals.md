@@ -22,6 +22,8 @@
 | `polyphone.lines_total` | `polyphone_lines_total` | Logical line count after duplicate line-key records are collapsed |
 | `polyphone.config_param_source` | `polyphone_config_param_source` | Source of an allowlisted configuration parameter |
 | `polyphone.api_state` | `polyphone_api_state` | Full current-state enum: `state` is one of `ok`, `api_disabled`, `auth_failed` or `unreachable`; the current state is `1` and every noncurrent state is `0` |
+| `polyphone.network.info` | `polyphone_network_info` | Current network configuration; dimensions are DHCP state, DHCP server, gateway, subnet mask, and boot-server option (never the phone address) |
+| `polyphone.calls` | `polyphone_calls_total` | New call-log records by `direction` (`placed`, `received`, or `missed`) |
 
 ## Metric series identity
 
@@ -41,14 +43,20 @@ At process start the exporter emits the `polylens2otel.startup` event with the
 `version`, `commit`, and `build.date` attributes. `polylens2otel.build_info` is
 a metric with the same build metadata.
 
-## CDR logs
+## Call-record logs
 
-Each new CDR row is an OTLP log with `event.name=polylens.cdr`. CDR attributes are Loki structured metadata. Only `service_name` is a stream label, so query the stream first and filter the event afterward:
+Each new Lens CDR row is an OTLP log with `event.name=polylens.cdr`. Each new phone call-log row is an OTLP log with `event.name=polyphone.call_record`. Call-record attributes are Loki structured metadata. Only `service_name` is a stream label, so query the stream first and filter the event afterward:
 
 ```logql
 {service_name="polylens2otel"} | event_name="polylens.cdr"
 ```
 
-`{event_name="polylens.cdr"}` returns no rows because `event_name` is not a stream label.
+For phone call records, use:
+
+```logql
+{service_name="polylens2otel"} | event_name="polyphone.call_record"
+```
+
+`event_name` and every call-record field, including direction, remote party, line, duration, disposition, and start time, are structured metadata rather than Loki stream labels.
 
 Rows without parseable event timestamps are dropped. Duration is computed from `startTime` and `endTime`; deduplication uses `deviceId + startTime` because Lens returns a null CDR ID.

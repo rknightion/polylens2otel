@@ -14,6 +14,8 @@
     {"name":"polyphone.lines_total","prometheus":"polyphone_lines_total","kind":"gauge","owner":"L9"},
     {"name":"polyphone.config_param_source","prometheus":"polyphone_config_param_source","kind":"gauge","owner":"L9"},
     {"name":"polyphone.api_state","prometheus":"polyphone_api_state","kind":"gauge","owner":"L9"},
+    {"name":"polyphone.network.info","prometheus":"polyphone_network_info","kind":"gauge","owner":"L10"},
+    {"name":"polyphone.calls","prometheus":"polyphone_calls_total","kind":"counter","owner":"L10"},
     {"name":"polylens2otel.build_info","prometheus":"polylens2otel_build_info","kind":"gauge","owner":"L11"},
     {"name":"polylens2otel.collector.duration","prometheus":"polylens2otel_collector_duration_seconds","kind":"gauge","owner":"L11"},
     {"name":"polylens2otel.collector.availability","prometheus":"polylens2otel_collector_availability_ratio","kind":"gauge","owner":"L11"},
@@ -31,5 +33,8 @@
     {"name":"polylens2otel.ingest.source_records","prometheus":"polylens2otel_ingest_source_records_total","kind":"counter","owner":"L8"},
     {"name":"polylens2otel.checkpoint.persist.errors","prometheus":"polylens2otel_checkpoint_persist_errors_total","kind":"counter","owner":"L8"}
   ],
-  "logs": [{"event_name":"polylens.cdr","stream_label":"service_name=polylens2otel","owner":"L8"}]
+  "logs": [
+    {"event_name":"polylens.cdr","stream_label":"service_name=polylens2otel","owner":"L8"},
+    {"event_name":"polyphone.call_record","stream_label":"service_name=polylens2otel","owner":"L10"}
+  ]
 }

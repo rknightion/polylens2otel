@@ -60,6 +60,14 @@ def render() -> dict:
         "targets": [{"refId": "A", "expr": '{service_name="polylens2otel"} | event_name="polylens.cdr"'}],
         "gridPos": {"h": 9, "w": 24, "x": 0, "y": 18},
     })
+    panels.append({
+        "id": 5,
+        "title": "Phone call records",
+        "type": "logs",
+        "datasource": {"type": "loki", "uid": "grafanacloud-logs"},
+        "targets": [{"refId": "A", "expr": '{service_name="polylens2otel"} | event_name="polyphone.call_record"'}],
+        "gridPos": {"h": 9, "w": 24, "x": 0, "y": 27},
+    })
     return {
         "title": "polylens2otel",
         "uid": "polylens2otel",

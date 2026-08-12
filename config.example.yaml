@@ -44,7 +44,7 @@ phone:
   # Static per-device targets. Each <device-id> overrides that device's Lens internalIp; discovery never scans.
   targets:
     <device-id>: phone.example.invalid
-  # Read-only phone configuration parameters requested by the phone config collector.
+  # Read-only phone configuration parameters requested by the phone config collector; at most 50 to bound the phone response and resulting metric-series count.
   config_params: ["reg.1.address", "reg.2.address", "reg.1.label", "device.syslog.serverName", "tcpIpApp.sntp.address", "softkey.1.enable"]
   # Timeout for an individual phone REST request.
   request_timeout: 15s
@@ -52,8 +52,8 @@ phone:
     # Digest authentication username; Polycom is the default.
     username: "Polycom"
     # phone.auth.password is secret; set PL2O_PHONE__AUTH__PASSWORD in the environment.
-    # Use phone credentials from Lens policy where supported.
-    from_lens_policy: false
+    # Prefer credentials from the selected Lens policy; defaults to true. Set false to use only the configured password.
+    from_lens_policy: true
   tls:
     # Verify the phone TLS certificate chain.
     verify_chain: false

@@ -94,6 +94,16 @@
           "expr": "polyphone_api_state",
           "legendFormat": "polyphone.api_state",
           "refId": "F"
+        },
+        {
+          "expr": "polyphone_network_info",
+          "legendFormat": "polyphone.network.info",
+          "refId": "G"
+        },
+        {
+          "expr": "polyphone_calls_total",
+          "legendFormat": "polyphone.calls",
+          "refId": "H"
         }
       ],
       "title": "Phone fleet",
@@ -215,6 +225,27 @@
         }
       ],
       "title": "Lens CDR events",
+      "type": "logs"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "grafanacloud-logs"
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 24,
+        "x": 0,
+        "y": 27
+      },
+      "id": 5,
+      "targets": [
+        {
+          "expr": "{service_name=\"polylens2otel\"} | event_name=\"polyphone.call_record\"",
+          "refId": "A"
+        }
+      ],
+      "title": "Phone call records",
       "type": "logs"
     }
   ],
