@@ -1,0 +1,29 @@
+{
+  "errors": [
+    {
+      "message": "Cannot query field \"lastDetcted\" on type \"Device\". Did you mean \"lastDetected\"?",
+      "locations": [
+        {
+          "line": 3,
+          "column": 20
+        }
+      ],
+      "extensions": {
+        "code": "GRAPHQL_VALIDATION_FAILED",
+        "stacktrace": [
+          "GraphQLError: Cannot query field \"lastDetcted\" on type \"Device\". Did you mean \"lastDetected\"?",
+          "    at Object.Field (/app/node_modules/graphql/validation/rules/FieldsOnCorrectTypeRule.js:51:13)",
+          "    at Object.enter (/app/node_modules/graphql/language/visitor.js:298:32)",
+          "    at Object.enter (/app/node_modules/graphql/utilities/TypeInfo.js:391:27)",
+          "    at visit (/app/node_modules/graphql/language/visitor.js:194:21)",
+          "    at validate (/app/node_modules/graphql/validation/validate.js:102:24)",
+          "    at /app/node_modules/@opentelemetry/instrumentation-graphql/build/src/instrumentation.js:195:33",
+          "    at safeExecuteInTheMiddle (/app/node_modules/@opentelemetry/instrumentation-graphql/node_modules/@opentelemetry/instrumentation/build/src/utils.js:17:18)",
+          "    at /app/node_modules/@opentelemetry/instrumentation-graphql/build/src/instrumentation.js:194:65",
+          "    at AsyncLocalStorage.run (node:internal/async_local_storage/async_context_frame:63:14)",
+          "    at AsyncLocalStorageContextManager.with (/app/node_modules/@opentelemetry/context-async-hooks/build/src/AsyncLocalStorageContextManager.js:22:40)"
+        ]
+      }
+    }
+  ]
+}

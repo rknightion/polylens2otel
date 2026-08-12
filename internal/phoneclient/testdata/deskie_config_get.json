@@ -1,0 +1,29 @@
+{
+  "data": {
+    "reg.1.address": {
+      "Value": "",
+      "Source": "default"
+    },
+    "reg.2.address": {
+      "Value": "",
+      "Source": "default"
+    },
+    "reg.1.label": {
+      "Value": "",
+      "Source": "default"
+    },
+    "device.syslog.serverName": {
+      "Value": "192.0.2.5:514",
+      "Source": "device"
+    },
+    "tcpIpApp.sntp.address": {
+      "Value": "192.0.2.2",
+      "Source": "config"
+    },
+    "softkey.1.enable": {
+      "Value": "0",
+      "Source": "default"
+    }
+  },
+  "Status": "2000"
+}

@@ -1,0 +1,13 @@
+{
+  "data": [
+    {
+      "LineNumber": "1",
+      "RegistrationStatus": "unregistered",
+      "LineType": "private",
+      "SIPAddress": "EdgeE350",
+      "Label": "Edge E350",
+      "UserID": "Edge E350"
+    }
+  ],
+  "Status": "2000"
+}

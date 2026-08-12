@@ -30,3 +30,20 @@ go.work.sum
 # Editor/IDE
 # .idea/
 # .vscode/
+
+# Codex campaign scaffolding: goal files, launch messages and run-end reports.
+# Working state, not deliverables — same rule as plans and specs. Ignored as a
+# DIRECTORY so a new artefact type cannot leak by being named something a
+# filename pattern did not anticipate.
+codex/
+
+# superpowers plans and specs are local scratch, never committed.
+docs/superpowers/
+
+# Local config and credentials — never commit either.
+config.local.yaml
+.env
+.tools/
+bin/
+dist/
+THIRD_PARTY_NOTICES.md

@@ -1,0 +1,31 @@
+{
+  "data": {
+    "DHCP": "enabled",
+    "DHCPServer": "192.0.2.254",
+    "DHCPBootServerUseOption": "Static",
+    "DHCPBootServerOption": "160",
+    "DHCPBootServerOptionType": "String",
+    "DHCPOption60Format": "ASCII String",
+    "IPV4Address": "192.0.2.139",
+    "IPV6Address": "::",
+    "DefaultGateway": "192.0.2.254",
+    "SubnetMask": "255.255.255.0",
+    "DNSServer": "192.0.2.254",
+    "AlternateDNSServer": "",
+    "DNSDomain": "rob-knight.net",
+    "SNTPAddress": "192.0.2.2",
+    "LANPortStatus": "active",
+    "LANSpeed": "1000Mbps",
+    "LLDP": "enabled",
+    "CDPCompatibility": "enabled",
+    "VLANID": "",
+    "VLANDiscoveryMode": "Fixed",
+    "VLANIDOption": "129",
+    "ProvServerAddress": "https://t34848.deviceprovisioning.prod01-eu.dm.lens.poly.com",
+    "ProvServerType": "HTTPS",
+    "UpgradeServer": "",
+    "ProvServerUser": "m7kni",
+    "ZTPStatus": "enabled"
+  },
+  "Status": "2000"
+}

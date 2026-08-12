@@ -1,0 +1,16 @@
+{
+  "data": {
+    "ModelNumber": "Edge E350",
+    "FirmwareRelease": "8.6.0.1321",
+    "DeviceType": "hardwareEndpoint",
+    "DeviceVendor": "Poly",
+    "UpTimeSinceLastReboot": "0 Day 2:26:00",
+    "IPV4Address": "192.0.2.139",
+    "IPV6Address": "::",
+    "MACAddress": "482567139733",
+    "AttachedHardware": {
+      "EM": []
+    }
+  },
+  "Status": "2000"
+}

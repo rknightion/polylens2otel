@@ -1,0 +1,54 @@
+{
+  "data": {
+    "meetingRecordLists": {
+      "pageInfo": {
+        "hasNextPage": true,
+        "endCursor": "1"
+      },
+      "edges": [
+        {
+          "node": {
+            "id": null,
+            "deviceId": "482567139733",
+            "mac": "482567139733",
+            "startTime": "2025-12-15T16:52:59.466Z",
+            "endTime": "2025-12-15T16:53:08.466Z",
+            "callDirection": "OUTGOING",
+            "protocol": "SIP",
+            "disconnectInfo": "User terminated",
+            "remoteParty": "[redacted]",
+            "hardwareModel": "Edge E350",
+            "ipAddress": "192.0.2.139",
+            "softwareRelease": "8.3.1.0614",
+            "userId": null,
+            "productFamily": "Poly Edge E Family",
+            "answeredInSoftphone": null,
+            "softphoneVersion": null,
+            "callRate": null
+          }
+        },
+        {
+          "node": {
+            "id": null,
+            "deviceId": "482567139733",
+            "mac": "482567139733",
+            "startTime": "2025-12-18T11:37:41.458Z",
+            "endTime": "2025-12-18T11:37:57.458Z",
+            "callDirection": "OUTGOING",
+            "protocol": "SIP",
+            "disconnectInfo": "User terminated",
+            "remoteParty": "[redacted]",
+            "hardwareModel": "Edge E350",
+            "ipAddress": "192.0.2.139",
+            "softwareRelease": "8.3.1.0614",
+            "userId": null,
+            "productFamily": "Poly Edge E Family",
+            "answeredInSoftphone": null,
+            "softphoneVersion": null,
+            "callRate": null
+          }
+        }
+      ]
+    }
+  }
+}

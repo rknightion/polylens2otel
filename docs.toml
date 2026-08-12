@@ -1,0 +1,23 @@
+[site]
+name = "polylens2otel"
+description = "Exports Poly Lens and Poly phone telemetry as OpenTelemetry-native metrics, logs and traces"
+author = "Rob Knight"
+keywords = ["poly lens", "poly edge", "opentelemetry", "otlp", "grafana cloud", "observability", "go"]
+
+[[site.nav]]
+Home = "index.md"
+
+[[site.nav]]
+"Getting Started" = "getting-started.md"
+
+[[site.nav]]
+Configuration = "configuration.md"
+
+[[site.nav]]
+Reference = [
+  { Signals = "signals.md" },
+  { "Environment Variables" = "env-vars.md" },
+  { Security = "security.md" },
+  { Troubleshooting = "troubleshooting.md" },
+  { Comparison = "comparison.md" },
+]

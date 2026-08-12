@@ -1,0 +1,10 @@
+.git
+.github
+.tools
+bin
+dist
+coverage.*
+config.local.yaml
+.env
+codex
+docs/superpowers

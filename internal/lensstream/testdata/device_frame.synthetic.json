@@ -1,0 +1,27 @@
+{
+  "_fixture_meta": {
+    "synthetic": true,
+    "reason": "deviceStream is edge-triggered and emitted no frame during the live 15-second validation hold; all requested fields were accepted by the server"
+  },
+  "id": "1",
+  "type": "next",
+  "payload": {
+    "data": {
+      "deviceStream": {
+        "connected": true,
+        "externalIp": "198.51.100.31",
+        "hardwareRevision": "E",
+        "id": "482567139733",
+        "macAddress": "48:25:67:13:97:33",
+        "modelId": null,
+        "name": "deskie",
+        "productId": "Edge E350",
+        "roomId": null,
+        "siteId": "7ff7c5ad-ba55-4ba6-9fcd-fbf88d6bbeda",
+        "softwareBuild": "1321",
+        "softwareVersion": "8.6.0.1321",
+        "tenantId": "00000000-0000-4000-8000-000000000001"
+      }
+    }
+  }
+}

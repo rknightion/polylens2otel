@@ -1,0 +1,12 @@
+{
+  "upgrade_status": "HTTP/1.1 101 Switching Protocols",
+  "subprotocol": "graphql-transport-ws",
+  "authentication": "bearer on HTTP upgrade and connection_init payload",
+  "connection_ack": {
+    "type": "connection_ack"
+  },
+  "operation_name": "DevStream",
+  "query": "subscription DevStream {\n deviceStream(deviceIds:[\"482567139733\",\"482567908b97\"]) {\n  connected externalIp hardwareRevision id macAddress modelId name productId roomId siteId softwareBuild softwareVersion tenantId\n }\n}",
+  "post_subscribe_frame": null,
+  "held_open_seconds": 15.002
+}

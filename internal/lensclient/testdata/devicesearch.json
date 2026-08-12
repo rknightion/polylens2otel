@@ -1,0 +1,61 @@
+{
+  "data": {
+    "tenant": {
+      "inventory": {
+        "deviceSearch": {
+          "pageInfo": {
+            "totalCount": 2,
+            "hasNextPage": false,
+            "nextToken": null
+          },
+          "edges": [
+            {
+              "node": {
+                "id": "482567139733",
+                "name": "deskie",
+                "connected": true,
+                "lastDetected": "2026-08-12T09:18:43.740Z",
+                "lastConfigRequestDate": "2026-08-12T09:18:59.071Z",
+                "softwareVersion": "8.6.0.1321",
+                "softwareBuild": "1321",
+                "internalIp": "192.0.2.139",
+                "externalIp": "198.51.100.31",
+                "hardwareModel": "Edge E350",
+                "productId": "Edge E350",
+                "macAddress": "48:25:67:13:97:33",
+                "hardwareRevision": "E",
+                "site": {
+                  "id": "7ff7c5ad-ba55-4ba6-9fcd-fbf88d6bbeda",
+                  "name": "Home"
+                },
+                "room": null
+              }
+            },
+            {
+              "node": {
+                "id": "482567908b97",
+                "name": "extra",
+                "connected": false,
+                "lastDetected": "2026-08-12T09:19:41.047Z",
+                "lastConfigRequestDate": "2026-08-12T09:18:23.478Z",
+                "softwareVersion": "8.6.0.1321",
+                "softwareBuild": "1321",
+                "internalIp": "192.0.2.173",
+                "externalIp": "198.51.100.31",
+                "hardwareModel": "Edge E350",
+                "productId": "Edge E350",
+                "macAddress": "48:25:67:90:8b:97",
+                "hardwareRevision": "E",
+                "site": {
+                  "id": "7ff7c5ad-ba55-4ba6-9fcd-fbf88d6bbeda",
+                  "name": "Home"
+                },
+                "room": null
+              }
+            }
+          ]
+        }
+      }
+    }
+  }
+}

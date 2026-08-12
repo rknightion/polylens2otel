@@ -1,0 +1,27 @@
+{
+  "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
+  "release-type": "go",
+  "include-component-in-tag": false,
+  "packages": {
+    ".": {
+      "changelog-path": "CHANGELOG.md",
+      "package-name": "polylens2otel",
+      "extra-files": [
+        {"type":"yaml","path":"charts/polylens2otel/Chart.yaml","jsonpath":"$.version"},
+        {"type":"yaml","path":"charts/polylens2otel/Chart.yaml","jsonpath":"$.appVersion"},
+        {"type":"generic","path":"charts/polylens2otel/README.md"}
+      ]
+    }
+  },
+  "changelog-sections": [
+    {"type":"feat","section":"Features"},
+    {"type":"fix","section":"Bug Fixes"},
+    {"type":"perf","section":"Performance"},
+    {"type":"refactor","section":"Refactoring"},
+    {"type":"docs","section":"Documentation","hidden":true},
+    {"type":"test","section":"Tests","hidden":true},
+    {"type":"chore","section":"Miscellaneous","hidden":true},
+    {"type":"ci","section":"Continuous Integration","hidden":true},
+    {"type":"build","section":"Build System","hidden":true}
+  ]
+}

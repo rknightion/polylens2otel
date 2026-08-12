@@ -1,0 +1,18 @@
+HTTP/1.1 404 Not Found
+Date: Wed, 12 Aug 2026 11:43:50 GMT
+Content-Type: text/html; charset=utf-8
+Transfer-Encoding: chunked
+Connection: close
+Server: Poly Edge Telephone HTTPd
+X-Frame-Options: SAMEORIGIN
+X-Content-Type-Options: nosniff
+X-XSS-Protection: 1
+Referrer-Policy: strict-origin-when-cross-origin
+Permissions-Policy: geolocation=(self)
+Cache-Control: no-store
+Strict-Transport-Security: max-age=2592000
+
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 2.0//EN">
+<html><head><title>404 Not Found</title></head><body>
+The document requested was not found on this server.
+</body></html>
