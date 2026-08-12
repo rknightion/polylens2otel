@@ -23,7 +23,28 @@ permissions:
   contents: read
 
 jobs:
+  metadata:
+    name: resolve build metadata
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    outputs:
+      commit: ${{ steps.build.outputs.commit }}
+      build_date: ${{ steps.build.outputs.build_date }}
+    steps:
+      - name: Checkout the image source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.release_tag || github.ref }}
+          persist-credentials: false
+      - name: Resolve source metadata
+        id: build
+        run: |
+          echo "commit=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+          echo "build_date=$(git show -s --format=%cI HEAD)" >> "$GITHUB_OUTPUT"
+
   image:
+    needs: metadata
     if: ${{ !github.event.repository.private }}
     permissions:
       contents: write
@@ -37,8 +58,8 @@ jobs:
       dockerfile: Dockerfile
       helm-chart-path: charts/polylens2otel
       build-args: |
-        COMMIT=${{ github.sha }}
-        BUILD_DATE=${{ github.event.head_commit.timestamp || github.event.repository.updated_at }}
+        COMMIT=${{ needs.metadata.outputs.commit }}
+        BUILD_DATE=${{ needs.metadata.outputs.build_date }}
 
   # GitHub build attestations and code scanning are unavailable for a user-owned
   # private repository. Keep the public path on the fleet reusable above, while
