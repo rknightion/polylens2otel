@@ -20,6 +20,14 @@ make build
 make check
 ```
 
+`make build` embeds the resolved version, source commit, and UTC build date in
+the binary. `make docker` passes the same three values into the image build;
+without explicit overrides they are derived from the local Git checkout and the
+current UTC time. Published release images carry the release version, the
+release commit, and their UTC build date. The mutable `:main` image is an edge
+build rather than a release image; use a release tag when deployment needs a
+fixed version.
+
 Run with a non-secret YAML file and credentials supplied through `PL2O_` environment variables:
 
 ```sh

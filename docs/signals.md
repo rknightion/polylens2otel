@@ -21,9 +21,25 @@
 | `polyphone.line.registered` | `polyphone_line_registered` | Registration state per logical line |
 | `polyphone.lines_total` | `polyphone_lines_total` | Logical line count after duplicate line-key records are collapsed |
 | `polyphone.config_param_source` | `polyphone_config_param_source` | Source of an allowlisted configuration parameter |
-| `polyphone.api_state` | `polyphone_api_state` | One of `ok`, `api_disabled`, `auth_failed` or `unreachable` |
+| `polyphone.api_state` | `polyphone_api_state` | Full current-state enum: `state` is one of `ok`, `api_disabled`, `auth_failed` or `unreachable`; the current state is `1` and every noncurrent state is `0` |
+
+## Metric series identity
+
+The shared device portion of metric-series identity uses only stable attributes:
+`tenant.id`, `device.id`, `device.name`, `device.mac`, `device.model`, and
+`site.name` when available. Each metric can additionally have its documented
+dimensions, such as `state` for `polyphone.api_state`. `net.host.ip` is
+deliberately excluded: a device address can change, and it must not create a
+new metric series. Consumers should treat this as the public metric identity
+contract and must not group, alert, or join device metric series by IP address.
+
+## Self-observability
 
 Self-observability uses the `polylens2otel.*` namespace. The generated dashboard accounts for every metric in `spec/signal-catalog.json`.
+
+At process start the exporter emits the `polylens2otel.startup` event with the
+`version`, `commit`, and `build.date` attributes. `polylens2otel.build_info` is
+a metric with the same build metadata.
 
 ## CDR logs
 
