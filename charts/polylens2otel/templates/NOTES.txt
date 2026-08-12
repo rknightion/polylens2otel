@@ -1,0 +1,7 @@
+polylens2otel has been deployed as {{ include "polylens2otel.fullname" . }}.
+
+It is a single-instance OTLP push poller. It has no Prometheus or HTTP health
+endpoint, so the chart intentionally configures no synthetic HTTP probes.
+
+The ConfigMap contains non-secret configuration only. Supply required PL2O_*
+credentials through existingSecret={{ .Values.existingSecret | default "<a Kubernetes Secret>" }}.

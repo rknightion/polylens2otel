@@ -1,0 +1,125 @@
+image:
+  repository: ghcr.io/rknightion/polylens2otel
+  tag: ""
+  pullPolicy: IfNotPresent
+imagePullSecrets: []
+
+# Keep this at one: the poller has no leader election and replicas would emit
+# duplicate telemetry.
+replicaCount: 1
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+  name: ""
+  automountServiceAccountToken: false
+
+podAnnotations: {}
+podLabels: {}
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 65532
+  runAsGroup: 65532
+  fsGroup: 65532
+  fsGroupChangePolicy: OnRootMismatch
+  seccompProfile:
+    type: RuntimeDefault
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  runAsUser: 65532
+  runAsGroup: 65532
+  capabilities:
+    drop: ["ALL"]
+resources:
+  requests:
+    cpu: 50m
+    memory: 64Mi
+  limits:
+    cpu: 500m
+    memory: 256Mi
+nodeSelector: {}
+tolerations: []
+affinity: {}
+
+# The chart never renders credentials. Create this Secret separately with the
+# required PL2O_* keys (for example PL2O_LENS__CLIENT_SECRET and
+# PL2O_OTLP__GRAFANA_CLOUD__TOKEN); its keys are injected via envFrom.
+existingSecret: ""
+extraEnv: []
+extraVolumes: []
+extraVolumeMounts: []
+
+persistence:
+  # File-backed state prevents a restart from losing poll checkpoints.
+  enabled: true
+  existingClaim: ""
+  storageClass: ""
+  accessMode: ReadWriteOnce
+  size: 1Gi
+
+# This is the non-secret YAML configuration passed through to the application.
+# Config precedence remains defaults < this YAML < PL2O_* environment variables.
+config:
+  log:
+    level: info
+    format: json
+  lens:
+    token_url: https://login.lens.poly.com/oauth/token
+    graphql_url: https://api.silica-prod01.io.lens.poly.com/graphql
+    websocket_url: wss://api.silica-prod01.io.lens.poly.com/graphql
+    tenants: []
+    page_size: 10
+    request_timeout: 30s
+    retry:
+      max_attempts: 4
+      min_backoff: 1s
+      max_backoff: 30s
+    stream:
+      enabled: true
+      ack_timeout: 10s
+      min_backoff: 1s
+      max_backoff: 1m
+  phone:
+    enabled: true
+    targets: {}
+    config_params:
+      - reg.1.address
+      - reg.2.address
+      - reg.1.label
+      - device.syslog.serverName
+      - tcpIpApp.sntp.address
+      - softkey.1.enable
+    request_timeout: 15s
+    auth:
+      username: Polycom
+      from_lens_policy: false
+    tls:
+      verify_chain: false
+      ca_file: ""
+  collectors:
+    lens_devices: 1m
+    lens_active_calls: 1m
+    lens_firmware: 24h
+    lens_cdr: 1h
+    phone_status: 1m
+    phone_lines: 1m
+    phone_config: 5m
+    selfobs_internal: 1m
+  otlp:
+    endpoint: ""
+    protocol: http
+    insecure: false
+    export_interval: 15s
+    grafana_cloud:
+      instance_id: ""
+  profiling:
+    pyroscope:
+      endpoint: ""
+      application: polylens2otel
+      basic_auth_user: ""
+  state:
+    dir: /var/lib/polylens2otel
+  cardinality:
+    max_devices: 500

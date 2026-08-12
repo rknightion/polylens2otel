@@ -6,5 +6,7 @@ dist
 coverage.*
 config.local.yaml
 .env
+deploy/.env
+deploy/secrets/
 codex
 docs/superpowers

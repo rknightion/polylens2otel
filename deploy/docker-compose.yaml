@@ -1,0 +1,26 @@
+# Camden reference deployment. This file is deliberately free of secrets and
+# real deployment identifiers. Place PL2O_* values in the sibling root-only
+# deploy/.env file; do not commit that file.
+services:
+  polylens2otel:
+    # release-please updates this default as releases are published.
+    image: ghcr.io/rknightion/polylens2otel:${POLYLENS2OTEL_VERSION:-0.0.0} # x-release-please-version
+    restart: unless-stopped
+    user: "65532:65532"
+    read_only: true
+    cap_drop: [ALL]
+    security_opt:
+      - no-new-privileges:true
+    labels:
+      com.centurylinklabs.watchtower.scope: fastlane
+    command: ["-config", "/etc/polylens2otel/config.yaml"]
+    environment:
+      PL2O_LENS__CLIENT_ID: ${PL2O_LENS__CLIENT_ID:-}
+      PL2O_LENS__CLIENT_SECRET: ${PL2O_LENS__CLIENT_SECRET:-}
+      PL2O_PHONE__AUTH__PASSWORD: ${PL2O_PHONE__AUTH__PASSWORD:-}
+      PL2O_OTLP__GRAFANA_CLOUD__INSTANCE_ID: ${PL2O_OTLP__GRAFANA_CLOUD__INSTANCE_ID:-}
+      PL2O_OTLP__GRAFANA_CLOUD__TOKEN: ${PL2O_OTLP__GRAFANA_CLOUD__TOKEN:-}
+      PL2O_PROFILING__PYROSCOPE__BASIC_AUTH_PASSWORD: ${PL2O_PROFILING__PYROSCOPE__BASIC_AUTH_PASSWORD:-}
+    volumes:
+      - /opt/polylens2otel/config.yaml:/etc/polylens2otel/config.yaml:ro
+      - /opt/polylens2otel/state:/var/lib/polylens2otel

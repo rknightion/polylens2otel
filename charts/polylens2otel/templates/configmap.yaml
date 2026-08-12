@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "polylens2otel.fullname" . }}
+  labels:
+    {{- include "polylens2otel.labels" . | nindent 4 }}
+data:
+  config.yaml: |
+    {{- include "polylens2otel.config" . | nindent 4 }}

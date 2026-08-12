@@ -1,0 +1,23 @@
+# polylens2otel
+
+Deploys the single-instance `polylens2otel` poller. The chart mounts a
+non-secret ConfigMap at `/etc/polylens2otel/config.yaml` and persists its
+file-backed state under `/var/lib/polylens2otel`.
+
+Create a Kubernetes Secret with the required `PL2O_*` credentials, then refer
+to it without placing secrets in Helm values:
+
+```sh
+kubectl create secret generic polylens2otel-credentials \
+  --from-literal=PL2O_LENS__CLIENT_ID='<client-id>' \
+  --from-literal=PL2O_LENS__CLIENT_SECRET='<client-secret>' \
+  --from-literal=PL2O_PHONE__AUTH__PASSWORD='<phone-password>' \
+  --from-literal=PL2O_OTLP__GRAFANA_CLOUD__INSTANCE_ID='<instance-id>' \
+  --from-literal=PL2O_OTLP__GRAFANA_CLOUD__TOKEN='<otlp-token>'
+
+helm install polylens oci://ghcr.io/rknightion/charts/polylens2otel \
+  --set existingSecret=polylens2otel-credentials
+```
+
+The process is OTLP push only. It has no Prometheus, HTTP health, or readiness
+endpoint, so the Deployment intentionally has no fabricated HTTP probes.
