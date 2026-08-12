@@ -10,6 +10,7 @@ permissions: {}
 
 jobs:
   scorecard:
+    if: ${{ !github.event.repository.private }}
     runs-on: ubuntu-latest
     permissions:
       actions: read
@@ -42,3 +43,11 @@ jobs:
         uses: github/codeql-action/upload-sarif@54f647b7e1bb85c95cddabcd46b0c578ec92bc1a # v4.36.3
         with:
           sarif_file: results.sarif
+
+  private-repository-disposition:
+    if: ${{ github.event.repository.private }}
+    runs-on: ubuntu-latest
+    permissions: {}
+    steps:
+      - name: Record unavailable Scorecard API access
+        run: echo "::notice::OpenSSF Scorecard cannot query this private repository with GITHUB_TOKEN; no broader credential or visibility change is authorized in Wave 1."
