@@ -19,7 +19,7 @@ import (
 
 const collectorID = "lens.cdr"
 
-const query = `query MeetingRecordLists($tenantID: ID!, $after: String) {
+const query = `query MeetingRecordLists($tenantID: String!, $after: String) {
   meetingRecordLists(tenantId: [$tenantID], meetingRecordType: [CDR], timeRange: {relativeRange: {increment: DAY, value: 2}}, first: 100, after: $after) {
     pageInfo { hasNextPage endCursor }
     edges { node { deviceId mac startTime endTime callDirection protocol disconnectInfo remoteParty hardwareModel ipAddress softwareRelease userId productFamily answeredInSoftphone softphoneVersion callRate } }

@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/rknightion/polylens2otel/internal/collector"
@@ -111,6 +112,17 @@ func TestCollectDropsRowWithInvalidTimestamp(t *testing.T) {
 	}
 }
 
+func TestCollectQueryUsesLiveSchemaTenantVariableType(t *testing.T) {
+	queryClient := &captureQuery{response: json.RawMessage(`{"meetingRecordLists":{"pageInfo":{"hasNextPage":false},"edges":[]}}`)}
+	c := New(queryClient, filepath.Join(t.TempDir(), "state"), "tenant-a")
+	if err := c.Collect(context.Background(), telemetrytest.New().Emitter()); err != nil {
+		t.Fatalf("Collect() error = %v", err)
+	}
+	if !strings.Contains(queryClient.query, "$tenantID: String!") {
+		t.Fatalf("CDR query = %q, want tenantID declared as String!", queryClient.query)
+	}
+}
+
 func TestRegisterUsesConfiguredInterval(t *testing.T) {
 	registry := collector.NewRegistry()
 	cfg := config.Default()
@@ -132,6 +144,16 @@ func TestRegisterUsesConfiguredInterval(t *testing.T) {
 type fakeQuery struct {
 	responses []json.RawMessage
 	n         int
+}
+
+type captureQuery struct {
+	query    string
+	response json.RawMessage
+}
+
+func (c *captureQuery) Query(_ context.Context, query string, _ any, out any) error {
+	c.query = query
+	return json.Unmarshal(c.response, out)
 }
 
 func (f *fakeQuery) Query(_ context.Context, _ string, _ any, out any) error {

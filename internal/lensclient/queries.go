@@ -50,8 +50,8 @@ const devicesQuery = `query Devices($tenantID: ID!, $params: DeviceFindArgs!) {
   } } }
 }`
 
-const activeCallsQuery = `query ActiveCalls($deviceID: ID!) { activeCalls(deviceId: $deviceID) { calls { id state } } }`
-const firmwareQuery = `query Firmware($pid: String!) { availableProductSoftwareByPid(pid: $pid) { version releaseChannel } }`
+const activeCallsQuery = `query ActiveCalls($deviceID: String!) { activeCalls(deviceId: $deviceID) { calls { id state } } }`
+const firmwareQuery = `query Firmware($pid: ID!) { availableProductSoftwareByPid(pid: $pid) { version releaseChannel } }`
 
 func (c *Client) Tenants(ctx context.Context) ([]Tenant, error) {
 	var response struct {

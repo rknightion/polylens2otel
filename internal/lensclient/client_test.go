@@ -289,6 +289,58 @@ func TestGoldenFixturesDecodeReadOnlyQueries(t *testing.T) {
 	}
 }
 
+func TestActiveCallsQueryUsesLiveSchemaVariableType(t *testing.T) {
+	var query string
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/token" {
+			_, _ = io.WriteString(w, fixture(t, "token.json"))
+			return
+		}
+		var request struct {
+			Query string `json:"query"`
+		}
+		if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+			t.Fatal(err)
+		}
+		query = request.Query
+		_, _ = io.WriteString(w, fixture(t, "activecalls.json"))
+	}))
+	defer server.Close()
+
+	if _, err := newTestClient(t, server.URL).ActiveCalls(context.Background(), "device-a"); err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(query, "$deviceID: String!") {
+		t.Fatalf("ActiveCalls query = %q, want deviceID declared as String!", query)
+	}
+}
+
+func TestFirmwareQueryUsesLiveSchemaVariableType(t *testing.T) {
+	var query string
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/token" {
+			_, _ = io.WriteString(w, fixture(t, "token.json"))
+			return
+		}
+		var request struct {
+			Query string `json:"query"`
+		}
+		if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+			t.Fatal(err)
+		}
+		query = request.Query
+		_, _ = io.WriteString(w, fixture(t, "firmware.json"))
+	}))
+	defer server.Close()
+
+	if _, err := newTestClient(t, server.URL).LatestFirmware(context.Background(), "product-a"); err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(query, "$pid: ID!") {
+		t.Fatalf("Firmware query = %q, want pid declared as ID!", query)
+	}
+}
+
 func TestHTTPErrorRedactsConfiguredClientSecret(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path == "/token" {
