@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.2.0](https://github.com/rknightion/polylens2otel/compare/v0.1.0...v0.2.0) (2026-08-12)
+
+
+### Features
+
+* **phone:** resolve credentials from Lens policy ([d660a90](https://github.com/rknightion/polylens2otel/commit/d660a9092b6bc4ad9bb4ff11f9263da70f9a3d4a)), closes [#41](https://github.com/rknightion/polylens2otel/issues/41)
+
+
+### Bug Fixes
+
+* **release:** install Syft for binary SBOMs ([e98a182](https://github.com/rknightion/polylens2otel/commit/e98a1820c7caee7acc3a9d749ffc7abb81b24a71))
+* **release:** resolve metadata from release tag ([25c6f22](https://github.com/rknightion/polylens2otel/commit/25c6f22b1a41e67c3eb4f235a5a4d681cee7bbee))
+
 ## 0.1.0 (2026-08-12)
 
 
