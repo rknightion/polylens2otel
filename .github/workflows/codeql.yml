@@ -10,7 +10,6 @@ permissions: {}
 
 jobs:
   codeql:
-    if: ${{ !github.event.repository.private }}
     permissions:
       security-events: write
       packages: read
@@ -19,11 +18,3 @@ jobs:
     uses: rknightion/.github/.github/workflows/codeql.yml@65aedb61754e9bf31e947c17409256ba0c58c637 # v1.4.3
     with:
       languages: '[{"language":"go","build-mode":"autobuild"},{"language":"actions","build-mode":"none"}]'
-
-  private-repository-disposition:
-    if: ${{ github.event.repository.private }}
-    runs-on: ubuntu-latest
-    permissions: {}
-    steps:
-      - name: Record unavailable CodeQL feature
-        run: echo "::notice::CodeQL upload is unavailable while this user-owned repository is private; visibility changes are outside Wave 1 authority."

@@ -107,6 +107,8 @@ jobs:
           tags: polylens2otel:ci
           build-args: |
             VERSION=ci-${{ github.sha }}
+            COMMIT=${{ github.sha }}
+            BUILD_DATE=${{ github.event.head_commit.timestamp || github.event.repository.updated_at }}
 
   secret-hygiene:
     name: public repository secret hygiene

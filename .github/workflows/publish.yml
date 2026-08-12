@@ -36,6 +36,9 @@ jobs:
       release-tag: ${{ inputs.release_tag }}
       dockerfile: Dockerfile
       helm-chart-path: charts/polylens2otel
+      build-args: |
+        COMMIT=${{ github.sha }}
+        BUILD_DATE=${{ github.event.head_commit.timestamp || github.event.repository.updated_at }}
 
   # GitHub build attestations and code scanning are unavailable for a user-owned
   # private repository. Keep the public path on the fleet reusable above, while
@@ -68,12 +71,16 @@ jobs:
         with:
           ref: ${{ inputs.release_tag || github.ref }}
           persist-credentials: false
-      - name: Compute version
+      - name: Compute build metadata
         env:
           RELEASE_TAG: ${{ inputs.release_tag }}
         run: |
           if [ -n "${RELEASE_TAG}" ]; then version="${RELEASE_TAG#v}"; else version="$(git rev-parse --short HEAD)"; fi
-          echo "COMPUTED_VERSION=${version}" >> "$GITHUB_ENV"
+          {
+            echo "COMPUTED_VERSION=${version}"
+            echo "COMPUTED_COMMIT=$(git rev-parse HEAD)"
+            echo "COMPUTED_BUILD_DATE=$(date -u '+%Y-%m-%dT%H:%M:%SZ')"
+          } >> "$GITHUB_ENV"
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c # v4.2.0
       - name: Log in to GHCR
@@ -92,7 +99,10 @@ jobs:
           outputs: type=image,name=ghcr.io/${{ github.repository }},push-by-digest=true,name-canonical=true,push=true
           provenance: false
           sbom: false
-          build-args: VERSION=${{ env.COMPUTED_VERSION }}
+          build-args: |
+            VERSION=${{ env.COMPUTED_VERSION }}
+            COMMIT=${{ env.COMPUTED_COMMIT }}
+            BUILD_DATE=${{ env.COMPUTED_BUILD_DATE }}
       - name: Export digest
         env:
           BUILD_DIGEST: ${{ steps.build.outputs.digest }}
