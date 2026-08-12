@@ -7,9 +7,11 @@ COPY go.mod go.sum ./
 RUN go mod download
 COPY . .
 ARG VERSION=dev
+ARG COMMIT=unknown
+ARG BUILD_DATE=unknown
 RUN --mount=type=cache,target=/root/.cache/go-build \
     CGO_ENABLED=0 go build -trimpath \
-      -ldflags "-s -w -X github.com/rknightion/polylens2otel/internal/version.Version=${VERSION}" \
+      -ldflags "-s -w -X github.com/rknightion/polylens2otel/internal/version.Version=${VERSION} -X github.com/rknightion/polylens2otel/internal/version.Commit=${COMMIT} -X github.com/rknightion/polylens2otel/internal/version.BuildDate=${BUILD_DATE}" \
       -o /out/polylens2otel ./cmd/polylens2otel
 
 # Docker copies this ownership into a new empty named volume on first use.

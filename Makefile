@@ -77,7 +77,7 @@ install-hooks:
 	git config core.hooksPath .githooks
 
 docker:
-	docker build --build-arg VERSION=$(VERSION) -t $(BINARY):dev .
+	docker build --build-arg VERSION=$(VERSION) --build-arg COMMIT=$(COMMIT) --build-arg BUILD_DATE=$(BUILD_DATE) -t $(BINARY):dev .
 
 check: vet test lint govulncheck tidy-check grafana-check
 	$(GO) build ./...
