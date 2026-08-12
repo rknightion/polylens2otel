@@ -249,7 +249,10 @@ func resolvePhoneTargets(ctx context.Context, cfg *config.Config, lens phonetarg
 				ID: target.Device.ID, Name: target.Device.Name, MAC: target.Device.MACAddress,
 				Model: target.Device.HardwareModel, Site: site, IP: target.Address,
 			},
-			API: target.API,
+			API:                 target.API,
+			StateDir:            cfg.State.Dir,
+			CallLogsInterval:    cfg.Collectors.PhoneCallLogs,
+			NetworkInfoInterval: cfg.Collectors.PhoneNetworkInfo,
 		})
 	}
 	return targets, nil

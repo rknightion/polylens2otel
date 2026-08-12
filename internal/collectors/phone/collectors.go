@@ -51,9 +51,12 @@ type API interface {
 // Target couples an already identity-checked phone API client to the Lens
 // device resource attributes stamped at the emitter boundary.
 type Target struct {
-	TenantID string
-	Device   telemetry.Device
-	API      API
+	TenantID            string
+	Device              telemetry.Device
+	API                 API
+	StateDir            string
+	CallLogsInterval    time.Duration
+	NetworkInfoInterval time.Duration
 }
 
 func targetEmitter(emitter telemetry.Emitter, target Target) telemetry.Emitter {
