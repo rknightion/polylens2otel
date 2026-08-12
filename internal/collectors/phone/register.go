@@ -16,4 +16,6 @@ func Register(d collector.Deps) {
 	d.Registry.Register(NewStatus(targets))
 	d.Registry.Register(NewLines(targets))
 	d.Registry.Register(NewConfig(targets, d.Config.Phone.ConfigParams))
+	d.Registry.Register(NewCallLogs(targets))
+	d.Registry.Register(NewNetworkInfo(targets))
 }

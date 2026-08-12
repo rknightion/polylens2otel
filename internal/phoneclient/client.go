@@ -82,17 +82,18 @@ type NetworkStats struct {
 }
 
 type NetworkInfo struct {
-	DHCP               string `json:"DHCP"`
-	DHCPServer         string `json:"DHCPServer"`
-	IPV4Address        string `json:"IPV4Address"`
-	DefaultGateway     string `json:"DefaultGateway"`
-	SubnetMask         string `json:"SubnetMask"`
-	DNSServer          string `json:"DNSServer"`
-	AlternateDNSServer string `json:"AlternateDNSServer"`
-	DNSDomain          string `json:"DNSDomain"`
-	SNTPAddress        string `json:"SNTPAddress"`
-	LANPortStatus      string `json:"LANPortStatus"`
-	LANSpeed           string `json:"LANSpeed"`
+	DHCP                 string `json:"DHCP"`
+	DHCPServer           string `json:"DHCPServer"`
+	DHCPBootServerOption string `json:"DHCPBootServerOption"`
+	IPV4Address          string `json:"IPV4Address"`
+	DefaultGateway       string `json:"DefaultGateway"`
+	SubnetMask           string `json:"SubnetMask"`
+	DNSServer            string `json:"DNSServer"`
+	AlternateDNSServer   string `json:"AlternateDNSServer"`
+	DNSDomain            string `json:"DNSDomain"`
+	SNTPAddress          string `json:"SNTPAddress"`
+	LANPortStatus        string `json:"LANPortStatus"`
+	LANSpeed             string `json:"LANSpeed"`
 }
 
 type CallLogs struct {

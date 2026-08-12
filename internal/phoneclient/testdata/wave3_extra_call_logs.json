@@ -1,0 +1,44 @@
+{
+  "data": {
+    "Missed": [],
+    "Received": [],
+    "Placed": [
+      {
+        "LineNumber": "1",
+        "StartTime": "2026-08-12T18:21:57",
+        "RemotePartyName": "Fixture Contact 1",
+        "RemotePartyNumber": "fixture-remote-11",
+        "Duration": "16 secs"
+      },
+      {
+        "LineNumber": "1",
+        "StartTime": "2026-08-12T18:22:50",
+        "RemotePartyName": "Fixture Contact 2",
+        "RemotePartyNumber": "fixture-remote-12",
+        "Duration": "38 secs"
+      },
+      {
+        "LineNumber": "1",
+        "StartTime": "2026-08-12T18:44:23",
+        "RemotePartyName": "Fixture Contact 3",
+        "RemotePartyNumber": "fixture-remote-13",
+        "Duration": "15 secs"
+      },
+      {
+        "LineNumber": "1",
+        "StartTime": "2026-08-12T19:27:53",
+        "RemotePartyName": "Fixture Contact 4",
+        "RemotePartyNumber": "fixture-remote-14",
+        "Duration": "18 secs"
+      },
+      {
+        "LineNumber": "1",
+        "StartTime": "2026-08-12T19:33:18",
+        "RemotePartyName": "Fixture Contact 5",
+        "RemotePartyNumber": "fixture-remote-15",
+        "Duration": "18 secs"
+      }
+    ]
+  },
+  "Status": "2000"
+}

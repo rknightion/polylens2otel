@@ -1,0 +1,38 @@
+{
+  "data": {
+    "DHCP": "enabled",
+    "DHCPServer": "198.51.100.254",
+    "DHCPBootServerUseOption": "Static",
+    "DHCPBootServerOption": "160",
+    "DHCPBootServerOptionType": "String",
+    "DHCPOption60Format": "ASCII String",
+    "IPV4Address": "198.51.100.175",
+    "IPV6Address": "::",
+    "DefaultGateway": "198.51.100.254",
+    "SubnetMask": "255.255.255.0",
+    "DNSServer": "198.51.100.254",
+    "AlternateDNSServer": "",
+    "DNSDomain": "iot.example.test",
+    "SNTPAddress": "198.51.100.2",
+    "LANPortStatus": "inactive",
+    "LANSpeed": "10Mbps",
+    "LLDP": "enabled",
+    "CDPCompatibility": "enabled",
+    "VLANID": "",
+    "VLANDiscoveryMode": "Fixed",
+    "VLANIDOption": "129",
+    "ProvServerAddress": "https://provision.example.test",
+    "ProvServerType": "HTTPS",
+    "UpgradeServer": "",
+    "ProvServerUser": "fixture-user",
+    "ZTPStatus": "enabled",
+    "Wifi": {
+      "State": "Disconnected",
+      "SSID": "fixture-wifi",
+      "Duration": "0 days, 3 hours, 8 minutes, 56 seconds",
+      "Signal Strength": "0%",
+      "Security Mode": "WPA2PSK"
+    }
+  },
+  "Status": "2000"
+}

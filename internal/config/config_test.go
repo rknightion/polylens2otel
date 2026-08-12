@@ -25,6 +25,18 @@ func TestLoadPrecedenceAndDoubleUnderscoreEnv(t *testing.T) {
 	}
 }
 
+func TestDefaultIncludesWave3PhoneCollectorIntervals(t *testing.T) {
+	t.Parallel()
+
+	cfg := Default()
+	if got := cfg.Collectors.PhoneCallLogs; got != 5*time.Minute {
+		t.Fatalf("phone call logs interval = %s; want 5m", got)
+	}
+	if got := cfg.Collectors.PhoneNetworkInfo; got != 5*time.Minute {
+		t.Fatalf("phone network info interval = %s; want 5m", got)
+	}
+}
+
 func TestLoadRejectsSecretsInYAML(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "config.yaml")
 	secretYAML := "lens:\n  client_" + "secret: \"canary\"\n"

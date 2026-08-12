@@ -15,8 +15,13 @@ type Collector interface {
 }
 type Registry struct{ entries []Collector }
 
-func NewRegistry() *Registry             { return &Registry{} }
-func (r *Registry) Register(c Collector) { r.entries = append(r.entries, c) }
+func NewRegistry() *Registry { return &Registry{} }
+func (r *Registry) Register(c Collector) {
+	if c == nil {
+		return
+	}
+	r.entries = append(r.entries, c)
+}
 func (r *Registry) Entries() []Collector { return append([]Collector(nil), r.entries...) }
 
 type Deps struct {

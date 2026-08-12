@@ -42,6 +42,8 @@ var ConfigAllowlist = []string{
 type API interface {
 	Probe(context.Context) (phoneclient.State, error)
 	NetworkStats(context.Context) (phoneclient.NetworkStats, error)
+	NetworkInfo(context.Context) (phoneclient.NetworkInfo, error)
+	CallLogs(context.Context) (phoneclient.CallLogs, error)
 	LineInfo(context.Context) ([]phoneclient.Line, error)
 	ConfigGet(context.Context, []string) (map[string]phoneclient.ConfigParam, []string, error)
 }

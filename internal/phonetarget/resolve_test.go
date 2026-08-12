@@ -379,6 +379,14 @@ func (stubPhone) NetworkStats(context.Context) (phoneclient.NetworkStats, error)
 	return phoneclient.NetworkStats{}, nil
 }
 
+func (stubPhone) NetworkInfo(context.Context) (phoneclient.NetworkInfo, error) {
+	return phoneclient.NetworkInfo{}, nil
+}
+
+func (stubPhone) CallLogs(context.Context) (phoneclient.CallLogs, error) {
+	return phoneclient.CallLogs{}, nil
+}
+
 func (stubPhone) LineInfo(context.Context) ([]phoneclient.Line, error) {
 	return nil, nil
 }

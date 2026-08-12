@@ -82,14 +82,16 @@ type PhoneTLSConfig struct {
 }
 
 type CollectorConfig struct {
-	LensDevices     time.Duration `yaml:"lens_devices"`
-	LensActiveCalls time.Duration `yaml:"lens_active_calls"`
-	LensFirmware    time.Duration `yaml:"lens_firmware"`
-	LensCDR         time.Duration `yaml:"lens_cdr"`
-	PhoneStatus     time.Duration `yaml:"phone_status"`
-	PhoneLines      time.Duration `yaml:"phone_lines"`
-	PhoneConfig     time.Duration `yaml:"phone_config"`
-	SelfObs         time.Duration `yaml:"selfobs_internal"`
+	LensDevices      time.Duration `yaml:"lens_devices"`
+	LensActiveCalls  time.Duration `yaml:"lens_active_calls"`
+	LensFirmware     time.Duration `yaml:"lens_firmware"`
+	LensCDR          time.Duration `yaml:"lens_cdr"`
+	PhoneStatus      time.Duration `yaml:"phone_status"`
+	PhoneLines       time.Duration `yaml:"phone_lines"`
+	PhoneConfig      time.Duration `yaml:"phone_config"`
+	PhoneCallLogs    time.Duration `yaml:"phone_call_logs"`
+	PhoneNetworkInfo time.Duration `yaml:"phone_network_info"`
+	SelfObs          time.Duration `yaml:"selfobs_internal"`
 }
 
 type OTLPConfig struct {
@@ -146,7 +148,8 @@ func Default() Config {
 		Collectors: CollectorConfig{
 			LensDevices: time.Minute, LensActiveCalls: time.Minute, LensFirmware: 24 * time.Hour,
 			LensCDR: time.Hour, PhoneStatus: time.Minute, PhoneLines: time.Minute,
-			PhoneConfig: 5 * time.Minute, SelfObs: time.Minute,
+			PhoneConfig: 5 * time.Minute, PhoneCallLogs: 5 * time.Minute,
+			PhoneNetworkInfo: 5 * time.Minute, SelfObs: time.Minute,
 		},
 		OTLP:        OTLPConfig{Protocol: "http", ExportInterval: 15 * time.Second},
 		Profiling:   ProfilingConfig{Pyroscope: PyroscopeConfig{Application: "polylens2otel"}},

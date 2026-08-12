@@ -230,6 +230,8 @@ func TestParseUptime(t *testing.T) {
 type fakeAPI struct {
 	state             phoneclient.State
 	networkStats      phoneclient.NetworkStats
+	networkInfo       phoneclient.NetworkInfo
+	callLogs          phoneclient.CallLogs
 	lines             []phoneclient.Line
 	config            map[string]phoneclient.ConfigParam
 	networkStatsCalls int
@@ -241,6 +243,12 @@ func (f *fakeAPI) Probe(context.Context) (phoneclient.State, error) { return f.s
 func (f *fakeAPI) NetworkStats(context.Context) (phoneclient.NetworkStats, error) {
 	f.networkStatsCalls++
 	return f.networkStats, nil
+}
+func (f *fakeAPI) NetworkInfo(context.Context) (phoneclient.NetworkInfo, error) {
+	return f.networkInfo, nil
+}
+func (f *fakeAPI) CallLogs(context.Context) (phoneclient.CallLogs, error) {
+	return f.callLogs, nil
 }
 func (f *fakeAPI) LineInfo(context.Context) ([]phoneclient.Line, error) {
 	f.linesCalls++
