@@ -13,6 +13,9 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/rknightion/polylens2otel/internal/semconv"
+	"github.com/rknightion/polylens2otel/internal/telemetry"
 )
 
 const defaultPageSize = 10
@@ -31,6 +34,7 @@ type Config struct {
 	MinBackoff   time.Duration
 	MaxBackoff   time.Duration
 	HTTPClient   *http.Client
+	Emitter      telemetry.Emitter
 }
 
 // Client is safe for concurrent use.
@@ -131,6 +135,12 @@ func (c *Client) Query(ctx context.Context, document string, variables any, out 
 	return nil
 }
 
+// AccessToken returns the cached Lens token, refreshing it when required. It
+// exists for the WebSocket transport, which shares the same OAuth credential.
+func (c *Client) AccessToken(ctx context.Context) (string, error) {
+	return c.accessToken(ctx)
+}
+
 func (c *Client) accessToken(ctx context.Context) (string, error) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
@@ -156,6 +166,15 @@ func (c *Client) accessToken(ctx context.Context) (string, error) {
 		return "", errors.New("token response missing access_token or expires_in")
 	}
 	c.token, c.expiresAt = token.AccessToken, c.now().Add(time.Duration(token.ExpiresIn)*time.Second)
+	if c.cfg.Emitter != nil {
+		attrs := []telemetry.Attr{{Key: semconv.AttrSource, Value: "lens"}}
+		if err := c.cfg.Emitter.Counter(ctx, semconv.MetricAuthTokenRefresh, 1, attrs...); err != nil {
+			return "", fmt.Errorf("emit Lens token refresh: %w", err)
+		}
+		if err := c.cfg.Emitter.Gauge(ctx, semconv.MetricAuthTokenExpiresSeconds, float64(token.ExpiresIn), attrs...); err != nil {
+			return "", fmt.Errorf("emit Lens token expiry: %w", err)
+		}
+	}
 	return c.token, nil
 }
 

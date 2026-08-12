@@ -7,7 +7,7 @@ import (
 	"github.com/rknightion/polylens2otel/internal/lensclient"
 )
 
-const localAdminPasswordAttribute = "device.auth.localAdminPassword"
+const localAdminPasswordAttribute = "device.auth.localAdminPassword" //nolint:gosec // Lens configuration attribute name, not a credential.
 
 const localAdminPasswordQuery = `query PhoneLocalAdminPassword($policyID: String!) {
   getPolicyById(policyId: $policyID) {
@@ -42,7 +42,7 @@ type LensPolicySource struct {
 
 func NewLensPolicySource(query LensQuery, policyIDs PolicyIDSource) (*LensPolicySource, error) {
 	if query == nil || policyIDs == nil {
-		return nil, errors.New("Lens query and winning-policy source are required")
+		return nil, errors.New("lens query and winning-policy source are required")
 	}
 	return &LensPolicySource{query: query, policyIDs: policyIDs}, nil
 }
@@ -68,5 +68,5 @@ func (s *LensPolicySource) LocalAdminPassword(ctx context.Context, device lenscl
 			return attribute.Value, nil
 		}
 	}
-	return Secret{}, errors.New("Lens policy has no local admin password")
+	return Secret{}, errors.New("lens policy has no local admin password")
 }

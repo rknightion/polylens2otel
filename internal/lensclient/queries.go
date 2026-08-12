@@ -10,6 +10,7 @@ type Tenant struct {
 
 // Device is the inventory shape needed by Lens and phone collectors.
 type Device struct {
+	TenantID              string `json:"-"`
 	ID                    string `json:"id"`
 	Name                  string `json:"name"`
 	Connected             bool   `json:"connected"`

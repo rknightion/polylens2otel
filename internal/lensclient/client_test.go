@@ -11,6 +11,9 @@ import (
 	"sync/atomic"
 	"testing"
 	"time"
+
+	"github.com/rknightion/polylens2otel/internal/semconv"
+	"github.com/rknightion/polylens2otel/internal/telemetrytest"
 )
 
 func TestTokenRequestUsesJSONAndCachesToken(t *testing.T) {
@@ -48,6 +51,35 @@ func TestTokenRequestUsesJSONAndCachesToken(t *testing.T) {
 	}
 	if tokenCalls != 1 || queryCalls != 2 {
 		t.Fatalf("token calls=%d query calls=%d, want 1 and 2", tokenCalls, queryCalls)
+	}
+}
+
+func TestTokenRefreshEmitsLifecycleMetrics(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/token" {
+			_, _ = io.WriteString(w, fixture(t, "token.json"))
+			return
+		}
+		_, _ = io.WriteString(w, `{"data":{"tenants":[]}}`)
+	}))
+	defer server.Close()
+	recorder := telemetrytest.New()
+	c, err := New(Config{
+		TokenURL: server.URL + "/token", GraphQLURL: server.URL + "/graphql",
+		ClientID: "client", ClientSecret: "secret", Emitter: recorder.Emitter(),
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := c.AccessToken(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	attrs := map[string]string{semconv.AttrSource: "lens"}
+	if !recorder.HasMetric(semconv.MetricAuthTokenRefresh, attrs, 1) {
+		t.Fatal("missing token refresh counter")
+	}
+	if !recorder.HasMetric(semconv.MetricAuthTokenExpiresSeconds, attrs, 86400) {
+		t.Fatal("missing token expiry gauge")
 	}
 }
 

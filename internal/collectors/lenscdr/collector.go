@@ -138,7 +138,7 @@ func (c *Collector) Collect(ctx context.Context, emitter telemetry.Emitter) erro
 			break
 		}
 		if page.EndCursor == nil || *page.EndCursor == "" {
-			return errors.New("Lens CDR pagination reported another page without endCursor")
+			return errors.New("lens CDR pagination reported another page without endCursor")
 		}
 		after = page.EndCursor
 	}
@@ -240,12 +240,10 @@ func (c *Collector) saveWatermark(wm watermark) error {
 	tmpName := tmp.Name()
 	defer os.Remove(tmpName)
 	if _, err := tmp.Write(b); err != nil {
-		tmp.Close()
-		return err
+		return errors.Join(err, tmp.Close())
 	}
 	if err := tmp.Chmod(0o600); err != nil {
-		tmp.Close()
-		return err
+		return errors.Join(err, tmp.Close())
 	}
 	if err := tmp.Close(); err != nil {
 		return err

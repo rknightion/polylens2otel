@@ -20,7 +20,7 @@ const (
 	firmwareID    = "lens.firmware"
 )
 
-var errClientUnavailable = errors.New("Lens collector requires the lens service")
+var errClientUnavailable = errors.New("lens collector requires the lens service")
 
 type client interface {
 	Devices(context.Context, string) ([]lensclient.Device, error)
@@ -202,7 +202,7 @@ func (c baseCollector) devices(ctx context.Context, emitter telemetry.Emitter) (
 		if err := emitter.Gauge(ctx, semconv.MetricAPIUnexpected, 1, telemetry.Attr{Key: semconv.AttrSource, Value: "lens"}); err != nil {
 			return nil, err
 		}
-		return nil, fmt.Errorf("Lens device count %d exceeds cardinality.max_devices %d", len(devices), c.maxDevices)
+		return nil, fmt.Errorf("lens device count %d exceeds cardinality.max_devices %d", len(devices), c.maxDevices)
 	}
 	return devices, nil
 }
@@ -213,7 +213,7 @@ func (c baseCollector) resolveTenants(ctx context.Context) ([]string, error) {
 	}
 	tenantLookup, ok := c.client.(tenantClient)
 	if !ok {
-		return nil, errors.New("Lens tenant discovery requires a client with Tenants")
+		return nil, errors.New("lens tenant discovery requires a client with Tenants")
 	}
 	tenants, err := tenantLookup.Tenants(ctx)
 	if err != nil {

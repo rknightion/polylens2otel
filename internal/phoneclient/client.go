@@ -18,6 +18,8 @@ import (
 	"os"
 	"strings"
 	"time"
+
+	"github.com/rknightion/polylens2otel/internal/telemetry"
 )
 
 const managementPath = "/api/v1/mgmt"
@@ -38,6 +40,7 @@ type Config struct {
 	Password  string
 	Timeout   time.Duration
 	TLS       TLSConfig
+	Emitter   telemetry.Emitter
 }
 
 type TLSConfig struct {
@@ -149,7 +152,11 @@ func New(cfg Config) (*Client, error) {
 	}
 	transport := http.DefaultTransport.(*http.Transport).Clone()
 	transport.TLSClientConfig = tlsConfig
-	return &Client{baseURL: baseURL, username: cfg.Username, password: cfg.Password, http: &http.Client{Transport: transport, Timeout: cfg.Timeout}}, nil
+	var roundTripper http.RoundTripper = transport
+	if cfg.Emitter != nil {
+		roundTripper = telemetry.InstrumentHTTPTransport(transport, cfg.Emitter, "phone")
+	}
+	return &Client{baseURL: baseURL, username: cfg.Username, password: cfg.Password, http: &http.Client{Transport: roundTripper, Timeout: cfg.Timeout}}, nil
 }
 
 func (c *Client) Probe(ctx context.Context) (State, error) {

@@ -32,16 +32,18 @@ const subscription = `subscription DevStream($deviceIDs: [ID!]!) {
   }
 }`
 
-// Config contains the subscription's runtime settings. Token must come from
-// environment-backed application configuration and is never included in errors.
+// Config contains the subscription's runtime settings. Token or TokenSource
+// must return environment-backed application credentials; neither is included
+// in errors.
 type Config struct {
-	URL        string
-	Token      string
-	DeviceIDs  []string
-	AckTimeout time.Duration
-	MinBackoff time.Duration
-	MaxBackoff time.Duration
-	Emitter    telemetry.Emitter
+	URL         string
+	Token       string
+	TokenSource func(context.Context) (string, error)
+	DeviceIDs   []string
+	AckTimeout  time.Duration
+	MinBackoff  time.Duration
+	MaxBackoff  time.Duration
+	Emitter     telemetry.Emitter
 }
 
 // Stream owns one graphql-transport-ws connection for all configured devices.
@@ -82,19 +84,19 @@ func (s *Stream) Run(ctx context.Context) error {
 
 func (s *Stream) validate() error {
 	if strings.TrimSpace(s.cfg.URL) == "" {
-		return errors.New("Lens stream URL is required")
+		return errors.New("lens stream URL is required")
 	}
-	if strings.TrimSpace(s.cfg.Token) == "" {
-		return errors.New("Lens stream token is required")
+	if strings.TrimSpace(s.cfg.Token) == "" && s.cfg.TokenSource == nil {
+		return errors.New("lens stream token is required")
 	}
 	if len(s.cfg.DeviceIDs) == 0 {
-		return errors.New("Lens stream requires at least one device ID")
+		return errors.New("lens stream requires at least one device ID")
 	}
 	if s.cfg.Emitter == nil {
-		return errors.New("Lens stream emitter is required")
+		return errors.New("lens stream emitter is required")
 	}
 	if s.cfg.AckTimeout <= 0 {
-		return errors.New("Lens stream acknowledgement timeout must be positive")
+		return errors.New("lens stream acknowledgement timeout must be positive")
 	}
 	if s.cfg.MinBackoff <= 0 || s.cfg.MaxBackoff < s.cfg.MinBackoff {
 		return errors.New("invalid Lens stream reconnect backoff")
@@ -102,17 +104,37 @@ func (s *Stream) validate() error {
 	return nil
 }
 
-func (s *Stream) session(ctx context.Context) error {
-	conn, _, err := websocket.Dial(ctx, s.cfg.URL, &websocket.DialOptions{
-		HTTPHeader:   http.Header{"authorization": []string{"Bearer " + s.cfg.Token}},
+func (s *Stream) session(ctx context.Context) (err error) {
+	token := s.cfg.Token
+	if s.cfg.TokenSource != nil {
+		var err error
+		token, err = s.cfg.TokenSource(ctx)
+		if err != nil {
+			return fmt.Errorf("get Lens stream token: %w", err)
+		}
+	}
+	if strings.TrimSpace(token) == "" {
+		return errors.New("lens stream token source returned an empty token")
+	}
+	conn, response, dialErr := websocket.Dial(ctx, s.cfg.URL, &websocket.DialOptions{
+		HTTPHeader:   http.Header{"authorization": []string{"Bearer " + token}},
 		Subprotocols: []string{subprotocol},
 	})
-	if err != nil {
-		return fmt.Errorf("dial Lens stream: %w", err)
+	var responseCloseErr error
+	if response != nil && response.Body != nil {
+		// Dial closes the handshake body itself; the explicit close documents
+		// ownership for static analysis and is safe on the already-closed body.
+		responseCloseErr = response.Body.Close()
 	}
-	defer conn.CloseNow()
+	if dialErr != nil {
+		return errors.Join(fmt.Errorf("dial Lens stream: %w", dialErr), responseCloseErr)
+	}
+	if responseCloseErr != nil {
+		return errors.Join(fmt.Errorf("close Lens stream handshake response: %w", responseCloseErr), conn.CloseNow())
+	}
+	defer func() { err = errors.Join(err, conn.CloseNow()) }()
 
-	if err := s.write(ctx, conn, frame{Type: connectionInit, Payload: map[string]any{"authorization": "Bearer " + s.cfg.Token}}); err != nil {
+	if err := s.write(ctx, conn, frame{Type: connectionInit, Payload: map[string]any{"authorization": "Bearer " + token}}); err != nil {
 		return fmt.Errorf("send Lens stream connection_init: %w", err)
 	}
 	ackCtx, cancel := context.WithTimeout(ctx, s.cfg.AckTimeout)
@@ -145,9 +167,9 @@ func (s *Stream) session(ctx context.Context) error {
 				return err
 			}
 		case completeMessage:
-			return errors.New("Lens stream completed")
+			return errors.New("lens stream completed")
 		case "error":
-			return errors.New("Lens stream returned a subscription error")
+			return errors.New("lens stream returned a subscription error")
 		}
 	}
 }
@@ -167,7 +189,7 @@ func (s *Stream) emitDevice(ctx context.Context, payload map[string]any) error {
 	}
 	d := result.Data.Device
 	if d.ID == "" || d.TenantID == "" {
-		return errors.New("Lens stream device payload missing id or tenantId")
+		return errors.New("lens stream device payload missing id or tenantId")
 	}
 	emitter := s.cfg.Emitter.WithTenant(d.TenantID).WithDevice(telemetry.Device{
 		ID: d.ID, Name: d.Name, MAC: d.MACAddress, Model: d.ProductID, IP: d.ExternalIP,

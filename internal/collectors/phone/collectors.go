@@ -42,8 +42,16 @@ type API interface {
 // Target couples an already identity-checked phone API client to the Lens
 // device resource attributes stamped at the emitter boundary.
 type Target struct {
-	Device telemetry.Device
-	API    API
+	TenantID string
+	Device   telemetry.Device
+	API      API
+}
+
+func targetEmitter(emitter telemetry.Emitter, target Target) telemetry.Emitter {
+	if target.TenantID != "" {
+		emitter = emitter.WithTenant(target.TenantID)
+	}
+	return emitter.WithDevice(target.Device)
 }
 
 type statusCollector struct{ targets []Target }
@@ -59,7 +67,7 @@ func (c statusCollector) Collect(ctx context.Context, emitter telemetry.Emitter)
 		if err != nil || !validState(state) {
 			state = phoneclient.StateUnreachable
 		}
-		if err := emitGauge(ctx, emitter.WithDevice(target.Device), semconv.MetricPhoneAPIState, 1, telemetry.Attr{Key: semconv.AttrState, Value: string(state)}); err != nil {
+		if err := emitGauge(ctx, targetEmitter(emitter, target), semconv.MetricPhoneAPIState, 1, telemetry.Attr{Key: semconv.AttrState, Value: string(state)}); err != nil {
 			return err
 		}
 		if state != phoneclient.StateOK {
@@ -81,7 +89,7 @@ func (c statusCollector) Collect(ctx context.Context, emitter telemetry.Emitter)
 		if err != nil {
 			return fmt.Errorf("phone %s transmitted packet count: %w", target.Device.ID, err)
 		}
-		deviceEmitter := emitter.WithDevice(target.Device)
+		deviceEmitter := targetEmitter(emitter, target)
 		if err := emitGauge(ctx, deviceEmitter, semconv.MetricPhoneUptimeSeconds, uptime); err != nil {
 			return err
 		}
@@ -113,7 +121,7 @@ func (c linesCollector) Collect(ctx context.Context, emitter telemetry.Emitter) 
 			return fmt.Errorf("phone %s line info: %w", target.Device.ID, err)
 		}
 		lines = uniqueLines(lines)
-		deviceEmitter := emitter.WithDevice(target.Device)
+		deviceEmitter := targetEmitter(emitter, target)
 		if err := emitGauge(ctx, deviceEmitter, semconv.MetricPhoneLinesTotal, float64(len(lines))); err != nil {
 			return err
 		}
@@ -177,7 +185,7 @@ func (c configCollector) Collect(ctx context.Context, emitter telemetry.Emitter)
 		if len(invalid) != 0 {
 			return fmt.Errorf("phone %s config get invalid parameters: %s", target.Device.ID, strings.Join(invalid, ", "))
 		}
-		deviceEmitter := emitter.WithDevice(target.Device)
+		deviceEmitter := targetEmitter(emitter, target)
 		for _, name := range c.params {
 			param, ok := params[name]
 			if !ok {

@@ -55,4 +55,5 @@ const (
 	MetricIngestSourceRecords                = "polylens2otel.ingest.source_records"
 	MetricCheckpointPersistErrors            = "polylens2otel.checkpoint.persist.errors"
 	EventLensCDR                             = "polylens.cdr"
+	EventExporterStartup                     = "polylens2otel.startup"
 )

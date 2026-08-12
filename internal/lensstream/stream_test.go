@@ -23,6 +23,7 @@ import (
 func TestRunNamedSubscriptionEmitsDeviceAndSelfObservation(t *testing.T) {
 	rawFrame := readFixture(t, "testdata/device_frame.synthetic.json")
 	var headersOK atomic.Bool
+	var tokenCalls atomic.Int32
 	delivered := make(chan struct{}, 1)
 	server := websocketServer(t, func(ctx context.Context, r *http.Request, conn *websocket.Conn) error {
 		headersOK.Store(r.Header.Get("Authorization") == "Bearer test-token" && conn.Subprotocol() == subprotocol)
@@ -58,7 +59,10 @@ func TestRunNamedSubscriptionEmitsDeviceAndSelfObservation(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	done := make(chan error, 1)
 	go func() {
-		done <- New(Config{URL: server.URL, Token: "test-token", DeviceIDs: []string{"1", "2"}, AckTimeout: 100 * time.Millisecond, MinBackoff: time.Millisecond, MaxBackoff: 5 * time.Millisecond, Emitter: recorder.Emitter()}).Run(ctx)
+		done <- New(Config{URL: server.URL, TokenSource: func(context.Context) (string, error) {
+			tokenCalls.Add(1)
+			return "test-token", nil
+		}, DeviceIDs: []string{"1", "2"}, AckTimeout: 100 * time.Millisecond, MinBackoff: time.Millisecond, MaxBackoff: 5 * time.Millisecond, Emitter: recorder.Emitter()}).Run(ctx)
 	}()
 	select {
 	case <-delivered:
@@ -73,6 +77,9 @@ func TestRunNamedSubscriptionEmitsDeviceAndSelfObservation(t *testing.T) {
 	}
 	if !headersOK.Load() {
 		t.Fatal("upgrade did not carry bearer authorization and graphql-transport-ws subprotocol")
+	}
+	if tokenCalls.Load() != 1 {
+		t.Fatalf("token source calls = %d, want 1", tokenCalls.Load())
 	}
 	if !recorder.HasMetric(semconv.MetricLensStreamConnected, nil, 1) {
 		t.Fatal("missing connected stream metric")

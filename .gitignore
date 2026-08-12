@@ -47,3 +47,6 @@ config.local.yaml
 bin/
 dist/
 THIRD_PARTY_NOTICES.md
+
+# Python generator caches.
+__pycache__/

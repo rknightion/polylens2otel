@@ -21,11 +21,11 @@ func TestCollectorsEmitDegradedAndAPIDisabledFixturesPerInstance(t *testing.T) {
 	deskie := loadDeskFixture(t)
 	extra := &fakeAPI{state: phoneclient.StateAPIDisabled}
 	targets := []Target{
-		{Device: telemetry.Device{ID: "482567139733", Name: "deskie", MAC: "482567139733", Model: "Edge E350", IP: "192.0.2.139"}, API: deskie},
-		{Device: telemetry.Device{ID: "482567908b97", Name: "extra", MAC: "482567908b97", Model: "Edge E350", IP: "192.0.2.175"}, API: extra},
+		{TenantID: "tenant-a", Device: telemetry.Device{ID: "482567139733", Name: "deskie", MAC: "482567139733", Model: "Edge E350", IP: "192.0.2.139"}, API: deskie},
+		{TenantID: "tenant-a", Device: telemetry.Device{ID: "482567908b97", Name: "extra", MAC: "482567908b97", Model: "Edge E350", IP: "192.0.2.175"}, API: extra},
 	}
 	recorder := telemetrytest.New()
-	emitter := recorder.Emitter().WithTenant("tenant-a")
+	emitter := recorder.Emitter()
 
 	if err := NewStatus(targets).Collect(context.Background(), emitter); err != nil {
 		t.Fatalf("collect phone status: %v", err)
@@ -37,7 +37,7 @@ func TestCollectorsEmitDegradedAndAPIDisabledFixturesPerInstance(t *testing.T) {
 		t.Fatalf("collect phone config: %v", err)
 	}
 
-	assertMetric(t, recorder, semconv.MetricPhoneAPIState, 1, map[string]string{semconv.AttrDeviceName: "deskie", semconv.AttrState: string(phoneclient.StateOK)})
+	assertMetric(t, recorder, semconv.MetricPhoneAPIState, 1, map[string]string{semconv.AttrTenantID: "tenant-a", semconv.AttrDeviceName: "deskie", semconv.AttrState: string(phoneclient.StateOK)})
 	assertMetric(t, recorder, semconv.MetricPhoneAPIState, 1, map[string]string{semconv.AttrDeviceName: "extra", semconv.AttrState: string(phoneclient.StateAPIDisabled)})
 	assertExactlyOneAPIState(t, recorder, "deskie", phoneclient.StateOK)
 	assertExactlyOneAPIState(t, recorder, "extra", phoneclient.StateAPIDisabled)

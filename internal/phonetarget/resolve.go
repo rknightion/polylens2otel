@@ -35,6 +35,7 @@ type Config struct {
 	FromLensPolicy bool
 	Timeout        time.Duration
 	TLS            phoneclient.TLSConfig
+	HTTPEmitter    telemetry.Emitter
 	NewClient      func(phoneclient.Config) (API, error)
 }
 
@@ -73,11 +74,11 @@ func (r *Resolver) Resolve(ctx context.Context, devices []lensclient.Device) ([]
 		if r.cfg.FromLensPolicy {
 			var err error
 			if r.policy == nil {
-				err = fmt.Errorf("Lens policy password source is not configured")
+				err = fmt.Errorf("lens policy password source is not configured")
 			} else {
 				password, err = r.policy.LocalAdminPassword(ctx, device)
 				if err == nil && password.empty() {
-					err = fmt.Errorf("Lens policy password is empty")
+					err = fmt.Errorf("lens policy password is empty")
 				}
 			}
 			if err != nil {
@@ -94,6 +95,7 @@ func (r *Resolver) Resolve(ctx context.Context, devices []lensclient.Device) ([]
 			Password:  password.reveal(),
 			Timeout:   r.cfg.Timeout,
 			TLS:       r.cfg.TLS,
+			Emitter:   r.httpEmitter(device, address),
 		})
 		if err != nil {
 			return nil, err
@@ -107,6 +109,20 @@ func (r *Resolver) Resolve(ctx context.Context, devices []lensclient.Device) ([]
 		targets = append(targets, Target{Device: device, Address: address, API: client})
 	}
 	return targets, nil
+}
+
+func (r *Resolver) httpEmitter(device lensclient.Device, address string) telemetry.Emitter {
+	emitter := r.cfg.HTTPEmitter
+	if emitter == nil {
+		return nil
+	}
+	if device.TenantID != "" {
+		emitter = emitter.WithTenant(device.TenantID)
+	}
+	return emitter.WithDevice(telemetry.Device{
+		ID: device.ID, Name: device.Name, MAC: device.MACAddress,
+		Model: device.HardwareModel, IP: address,
+	})
 }
 
 func (r *Resolver) emitUnexpected(ctx context.Context, deviceID string) error {
