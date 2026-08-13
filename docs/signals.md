@@ -59,4 +59,10 @@ For phone call records, use:
 
 `event_name` and every call-record field, including direction, remote party, line, duration, disposition, and start time, are structured metadata rather than Loki stream labels.
 
+Phone call-log timestamps are local wall-clock values without an offset. The
+collector reads each phone's `tcpIpApp.sntp.olsonTimezoneID` setting and applies
+that IANA timezone, including its daylight-saving rules, before emitting the
+event timestamp. A missing, unsupported, or invalid timezone fails the
+collector rather than emitting a guessed timestamp.
+
 Rows without parseable event timestamps are dropped. Duration is computed from `startTime` and `endTime`; deduplication uses `deviceId + startTime` because Lens returns a null CDR ID.

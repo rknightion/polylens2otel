@@ -12,6 +12,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	_ "time/tzdata"
 
 	"github.com/rknightion/polylens2otel/internal/collector"
 	"github.com/rknightion/polylens2otel/internal/phoneclient"
@@ -19,7 +20,10 @@ import (
 	"github.com/rknightion/polylens2otel/internal/telemetry"
 )
 
-const callLogsID = "phone.call_logs"
+const (
+	callLogsID         = "phone.call_logs"
+	phoneTimezoneParam = "tcpIpApp.sntp.olsonTimezoneID"
+)
 
 // NewCallLogs is the frozen wave-3 collector seam.
 func NewCallLogs(targets []Target) collector.Collector {
@@ -53,6 +57,10 @@ func (c *callLogsCollector) Collect(ctx context.Context, emitter telemetry.Emitt
 		if err != nil || state != phoneclient.StateOK {
 			continue
 		}
+		location, err := phoneLocation(ctx, target.API)
+		if err != nil {
+			return fmt.Errorf("phone %s call-log timezone: %w", target.Device.ID, err)
+		}
 		checkpoint, err := c.loadWatermark(target)
 		if err != nil {
 			return fmt.Errorf("load phone %s call-log watermark: %w", target.Device.ID, err)
@@ -68,7 +76,7 @@ func (c *callLogsCollector) Collect(ctx context.Context, emitter telemetry.Emitt
 		deviceEmitter := targetEmitter(emitter, target)
 		callsByDirection := make(map[string]float64, 3)
 		for _, entry := range callLogEntries(logs) {
-			row, start, ok := parseCallLog(entry.raw)
+			row, start, ok := parseCallLog(entry.raw, location)
 			if !ok {
 				continue
 			}
@@ -132,12 +140,33 @@ type callLogRow struct {
 	Duration          string `json:"Duration"`
 }
 
-func parseCallLog(raw json.RawMessage) (callLogRow, time.Time, bool) {
+func phoneLocation(ctx context.Context, api API) (*time.Location, error) {
+	params, invalid, err := api.ConfigGet(ctx, []string{phoneTimezoneParam})
+	if err != nil {
+		return nil, err
+	}
+	for _, name := range invalid {
+		if name == phoneTimezoneParam {
+			return nil, fmt.Errorf("unsupported parameter %q", phoneTimezoneParam)
+		}
+	}
+	name := strings.TrimSpace(params[phoneTimezoneParam].Value)
+	if name == "" {
+		return nil, fmt.Errorf("missing parameter %q", phoneTimezoneParam)
+	}
+	location, err := time.LoadLocation(name)
+	if err != nil {
+		return nil, fmt.Errorf("load %q: %w", name, err)
+	}
+	return location, nil
+}
+
+func parseCallLog(raw json.RawMessage, location *time.Location) (callLogRow, time.Time, bool) {
 	var row callLogRow
 	if err := json.Unmarshal(raw, &row); err != nil {
 		return callLogRow{}, time.Time{}, false
 	}
-	start, err := time.ParseInLocation("2006-01-02T15:04:05", row.StartTime, time.UTC)
+	start, err := time.ParseInLocation("2006-01-02T15:04:05", row.StartTime, location)
 	if err != nil {
 		return callLogRow{}, time.Time{}, false
 	}

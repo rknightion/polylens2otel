@@ -5,7 +5,9 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
+	"time"
 
 	"github.com/rknightion/polylens2otel/internal/phoneclient"
 	"github.com/rknightion/polylens2otel/internal/semconv"
@@ -16,8 +18,8 @@ import (
 func TestCallLogsEmitRowsPerDevice(t *testing.T) {
 	t.Parallel()
 	targets := []Target{
-		{TenantID: "tenant-a", Device: telemetry.Device{ID: "deskie-id", Name: "deskie"}, API: &fakeAPI{state: phoneclient.StateOK, callLogs: loadCallLogsFixture(t, "wave3_deskie_call_logs.json")}},
-		{TenantID: "tenant-a", Device: telemetry.Device{ID: "extra-id", Name: "extra"}, API: &fakeAPI{state: phoneclient.StateOK, callLogs: loadCallLogsFixture(t, "wave3_extra_call_logs.json")}},
+		{TenantID: "tenant-a", Device: telemetry.Device{ID: "deskie-id", Name: "deskie"}, API: callLogAPI(loadCallLogsFixture(t, "wave3_deskie_call_logs.json"))},
+		{TenantID: "tenant-a", Device: telemetry.Device{ID: "extra-id", Name: "extra"}, API: callLogAPI(loadCallLogsFixture(t, "wave3_extra_call_logs.json"))},
 	}
 	recorder := telemetrytest.New()
 
@@ -55,8 +57,8 @@ func TestCallLogsEmptyAndUnparseableRowsEmitNothing(t *testing.T) {
 	t.Parallel()
 	invalidStart := json.RawMessage(`{"LineNumber":"1","StartTime":"not-a-time","RemotePartyName":"ignored","Duration":"15 secs"}`)
 	targets := []Target{
-		{Device: telemetry.Device{ID: "empty", Name: "empty"}, API: &fakeAPI{state: phoneclient.StateOK}},
-		{Device: telemetry.Device{ID: "invalid", Name: "invalid"}, API: &fakeAPI{state: phoneclient.StateOK, callLogs: phoneclient.CallLogs{Placed: []json.RawMessage{invalidStart}}}},
+		{Device: telemetry.Device{ID: "empty", Name: "empty"}, API: callLogAPI(phoneclient.CallLogs{})},
+		{Device: telemetry.Device{ID: "invalid", Name: "invalid"}, API: callLogAPI(phoneclient.CallLogs{Placed: []json.RawMessage{invalidStart}})},
 	}
 	recorder := telemetrytest.New()
 
@@ -76,7 +78,7 @@ func TestCallLogsCheckpointPreventsRestartReplay(t *testing.T) {
 	target := Target{
 		TenantID: "tenant-a",
 		Device:   telemetry.Device{ID: "deskie-id", Name: "deskie"},
-		API:      &fakeAPI{state: phoneclient.StateOK, callLogs: loadCallLogsFixture(t, "wave3_deskie_call_logs.json")},
+		API:      callLogAPI(loadCallLogsFixture(t, "wave3_deskie_call_logs.json")),
 		StateDir: t.TempDir(),
 	}
 	recorder := telemetrytest.New()
@@ -94,6 +96,108 @@ func TestCallLogsCheckpointPreventsRestartReplay(t *testing.T) {
 	}
 	if got := len(recorder.Metrics()); got != 1 {
 		t.Fatalf("metrics after restart = %#v, want first-pass metric only", got)
+	}
+}
+
+func TestCallLogsUsePhoneTimezoneAcrossDaylightSaving(t *testing.T) {
+	t.Parallel()
+	tests := []struct {
+		name      string
+		startTime string
+		wantUTC   time.Time
+	}{
+		{
+			name:      "summer",
+			startTime: "2026-08-13T10:45:16",
+			wantUTC:   time.Date(2026, time.August, 13, 9, 45, 16, 0, time.UTC),
+		},
+		{
+			name:      "winter",
+			startTime: "2026-12-13T10:45:16",
+			wantUTC:   time.Date(2026, time.December, 13, 10, 45, 16, 0, time.UTC),
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			row := json.RawMessage(`{"LineNumber":"1","StartTime":"` + tt.startTime + `","RemotePartyName":"redacted","Duration":"15 secs"}`)
+			recorder := telemetrytest.New()
+			target := Target{
+				Device: telemetry.Device{ID: "deskie", Name: "deskie"},
+				API:    callLogAPI(phoneclient.CallLogs{Placed: []json.RawMessage{row}}),
+			}
+
+			if err := NewCallLogs([]Target{target}).Collect(context.Background(), recorder.Emitter()); err != nil {
+				t.Fatalf("collect call logs: %v", err)
+			}
+			logs := recorder.Logs()
+			if len(logs) != 1 {
+				t.Fatalf("logs = %#v; want one call record", logs)
+			}
+			if !logs[0].Timestamp.Equal(tt.wantUTC) {
+				t.Fatalf("timestamp = %s; want %s", logs[0].Timestamp, tt.wantUTC)
+			}
+		})
+	}
+}
+
+func TestCallLogsRejectMissingOrInvalidPhoneTimezone(t *testing.T) {
+	t.Parallel()
+	row := json.RawMessage(`{"LineNumber":"1","StartTime":"2026-08-13T10:45:16","RemotePartyName":"redacted","Duration":"15 secs"}`)
+	tests := []struct {
+		name        string
+		config      map[string]phoneclient.ConfigParam
+		invalid     []string
+		wantMessage string
+	}{
+		{
+			name:        "missing",
+			wantMessage: `missing parameter "tcpIpApp.sntp.olsonTimezoneID"`,
+		},
+		{
+			name: "unsupported",
+			config: map[string]phoneclient.ConfigParam{
+				"tcpIpApp.sntp.olsonTimezoneID": {Value: "Europe/London"},
+			},
+			invalid:     []string{"tcpIpApp.sntp.olsonTimezoneID"},
+			wantMessage: `unsupported parameter "tcpIpApp.sntp.olsonTimezoneID"`,
+		},
+		{
+			name: "invalid IANA location",
+			config: map[string]phoneclient.ConfigParam{
+				"tcpIpApp.sntp.olsonTimezoneID": {Value: "Mars/Olympus"},
+			},
+			wantMessage: `load "Mars/Olympus"`,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			recorder := telemetrytest.New()
+			api := &fakeAPI{
+				state:         phoneclient.StateOK,
+				callLogs:      phoneclient.CallLogs{Placed: []json.RawMessage{row}},
+				config:        tt.config,
+				invalidParams: tt.invalid,
+			}
+			target := Target{Device: telemetry.Device{ID: "deskie", Name: "deskie"}, API: api}
+
+			err := NewCallLogs([]Target{target}).Collect(context.Background(), recorder.Emitter())
+			if err == nil || !strings.Contains(err.Error(), tt.wantMessage) {
+				t.Fatalf("Collect() error = %v; want message containing %q", err, tt.wantMessage)
+			}
+			if logs := recorder.Logs(); len(logs) != 0 {
+				t.Fatalf("logs = %#v; want none for an unresolved phone timezone", logs)
+			}
+		})
+	}
+}
+
+func callLogAPI(logs phoneclient.CallLogs) *fakeAPI {
+	return &fakeAPI{
+		state:    phoneclient.StateOK,
+		callLogs: logs,
+		config: map[string]phoneclient.ConfigParam{
+			"tcpIpApp.sntp.olsonTimezoneID": {Value: "Europe/London", Source: "config"},
+		},
 	}
 }
 

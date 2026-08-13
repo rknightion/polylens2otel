@@ -283,6 +283,7 @@ type fakeAPI struct {
 	callLogs          phoneclient.CallLogs
 	lines             []phoneclient.Line
 	config            map[string]phoneclient.ConfigParam
+	invalidParams     []string
 	networkStatsCalls int
 	linesCalls        int
 	configCalls       int
@@ -307,7 +308,7 @@ func (f *fakeAPI) LineInfo(context.Context) ([]phoneclient.Line, error) {
 func (f *fakeAPI) ConfigGet(_ context.Context, params []string) (map[string]phoneclient.ConfigParam, []string, error) {
 	f.configCalls++
 	f.configParams = append([]string(nil), params...)
-	return f.config, nil, nil
+	return f.config, f.invalidParams, nil
 }
 
 func loadDeskFixture(t *testing.T) *fakeAPI {
