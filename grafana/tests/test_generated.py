@@ -6,6 +6,21 @@ import build_rules
 
 
 class GeneratedArtefactTests(unittest.TestCase):
+    @staticmethod
+    def _panel(dashboard, title):
+        return next(
+            panel
+            for panel in dashboard["spec"]["elements"].values()
+            if panel["spec"]["title"] == title
+        )
+
+    @staticmethod
+    def _queries(panel):
+        return [
+            query["spec"]["query"]["spec"]
+            for query in panel["spec"]["data"]["spec"]["queries"]
+        ]
+
     def test_dashboard_is_v2_with_the_complete_top_level_tab_set(self):
         dashboard = build_dashboard.render()
         self.assertEqual(dashboard["apiVersion"], "dashboard.grafana.app/v2")
@@ -75,6 +90,48 @@ class GeneratedArtefactTests(unittest.TestCase):
                     placed.append(item["spec"]["element"]["name"])
         self.assertEqual(set(placed), set(dashboard["spec"]["elements"]))
         self.assertEqual(len(placed), len(set(placed)))
+
+    def test_current_state_panels_collapse_stale_series_from_the_previous_build(self):
+        dashboard = build_dashboard.render()
+        for title in [
+            "Lens-connected phones",
+            "Phone APIs healthy",
+            "Registered lines",
+            "Collectors healthy",
+            "Fleet connectivity",
+        ]:
+            expressions = [
+                query["expr"]
+                for query in self._queries(self._panel(dashboard, title))
+            ]
+            self.assertTrue(
+                all("without (service_version)" in expression for expression in expressions),
+                (title, expressions),
+            )
+
+    def test_cdr_activity_is_a_loki_rate_query_not_an_unwrapped_log_stream(self):
+        dashboard = build_dashboard.render()
+        query = self._queries(self._panel(dashboard, "Lens CDR records"))[0]["expr"]
+        self.assertIn("rate(", query)
+        self.assertIn("event_name=\"polylens.cdr\"", query)
+        self.assertNotIn("unwrap", query)
+
+    def test_trace_search_uses_tables_and_collector_metrics_group_by_collector_id(self):
+        dashboard = build_dashboard.render()
+        for title in ["Collector-run traces", "Outbound HTTP spans"]:
+            panel = self._panel(dashboard, title)
+            self.assertEqual(panel["spec"]["vizConfig"]["group"], "table")
+        for title in ["Collector p95 duration", "Collector run rate"]:
+            query = self._queries(self._panel(dashboard, title))[0]["query"]
+            self.assertIn("span.collector.id", query)
+            self.assertIn("$collector", query)
+
+    def test_headline_http_failure_stat_does_not_treat_digest_challenges_as_errors(self):
+        dashboard = build_dashboard.render()
+        panel = self._panel(dashboard, "HTTP 5xx (1h)")
+        query = self._queries(panel)[0]["expr"]
+        self.assertIn("polylens2otel_http_5xx_total", query)
+        self.assertNotIn("polylens2otel_http_4xx_total", query)
 
     def test_rules_use_only_catalog_metric_names(self):
         rendered = build_rules.render()

@@ -102,6 +102,9 @@ def tempo(query: str, *, ref_id: str = "A", table_type: str = "traces") -> dict:
         "query": query,
         "queryType": "traceql",
         "tableType": table_type,
+        "metricsQueryType": "range",
+        "serviceMapUseNativeHistograms": False,
+        "limit": 20,
     }, ref_id)
 
 

@@ -31,7 +31,7 @@
                       "group": "",
                       "kind": "DataQuery",
                       "spec": {
-                        "expr": "sum(polylens_device_connected{tenant_id=~\"$tenant\",site_name=~\"$site\",device_name=~\"$device\"})",
+                        "expr": "sum(max without (service_version) (polylens_device_connected{tenant_id=~\"$tenant\",site_name=~\"$site\",device_name=~\"$device\"}))",
                         "format": "time_series",
                         "instant": true,
                         "legendFormat": "",
@@ -98,7 +98,7 @@
                       "group": "",
                       "kind": "DataQuery",
                       "spec": {
-                        "expr": "max(polyphone_api_state{tenant_id=~\"$tenant\",site_name=~\"$site\",device_name=~\"$device\",state=\"ok\"})",
+                        "expr": "max without (service_version) (polyphone_api_state{tenant_id=~\"$tenant\",site_name=~\"$site\",device_name=~\"$device\",state=\"ok\"})",
                         "format": "time_series",
                         "instant": true,
                         "legendFormat": "",
@@ -180,7 +180,7 @@
                       "group": "",
                       "kind": "DataQuery",
                       "spec": {
-                        "expr": "sum(polyphone_line_registered{tenant_id=~\"$tenant\",site_name=~\"$site\",device_name=~\"$device\"})",
+                        "expr": "sum(max without (service_version) (polyphone_line_registered{tenant_id=~\"$tenant\",site_name=~\"$site\",device_name=~\"$device\"}))",
                         "format": "time_series",
                         "instant": true,
                         "legendFormat": "",
@@ -247,7 +247,7 @@
                       "group": "",
                       "kind": "DataQuery",
                       "spec": {
-                        "expr": "polyphone_uptime_seconds{tenant_id=~\"$tenant\",site_name=~\"$site\",device_name=~\"$device\"}",
+                        "expr": "max without (service_version) (polyphone_uptime_seconds{tenant_id=~\"$tenant\",site_name=~\"$site\",device_name=~\"$device\"})",
                         "format": "time_series",
                         "instant": true,
                         "legendFormat": "",
@@ -314,7 +314,7 @@
                       "group": "",
                       "kind": "DataQuery",
                       "spec": {
-                        "expr": "polylens_device_firmware_current{tenant_id=~\"$tenant\",site_name=~\"$site\",device_name=~\"$device\"}",
+                        "expr": "max without (service_version) (polylens_device_firmware_current{tenant_id=~\"$tenant\",site_name=~\"$site\",device_name=~\"$device\"})",
                         "format": "time_series",
                         "instant": true,
                         "legendFormat": "",
@@ -396,7 +396,7 @@
                       "group": "",
                       "kind": "DataQuery",
                       "spec": {
-                        "expr": "sum(polylens_device_active_calls{tenant_id=~\"$tenant\",site_name=~\"$site\",device_name=~\"$device\"})",
+                        "expr": "sum(max without (service_version) (polylens_device_active_calls{tenant_id=~\"$tenant\",site_name=~\"$site\",device_name=~\"$device\"})) or vector(0)",
                         "format": "time_series",
                         "instant": true,
                         "legendFormat": "",
@@ -463,7 +463,7 @@
                       "group": "",
                       "kind": "DataQuery",
                       "spec": {
-                        "expr": "polylens_device_connected{tenant_id=~\"$tenant\",site_name=~\"$site\",device_name=~\"$device\"}",
+                        "expr": "max without (service_version) (polylens_device_connected{tenant_id=~\"$tenant\",site_name=~\"$site\",device_name=~\"$device\"})",
                         "format": "time_series",
                         "instant": false,
                         "legendFormat": "{{device_name}}",
@@ -541,7 +541,7 @@
                       "group": "",
                       "kind": "DataQuery",
                       "spec": {
-                        "expr": "polylens_device_last_detected_seconds{tenant_id=~\"$tenant\",site_name=~\"$site\",device_name=~\"$device\"}",
+                        "expr": "max without (service_version) (polylens_device_last_detected_seconds{tenant_id=~\"$tenant\",site_name=~\"$site\",device_name=~\"$device\"})",
                         "format": "time_series",
                         "instant": false,
                         "legendFormat": "{{device_name}}",
@@ -619,7 +619,7 @@
                       "group": "",
                       "kind": "DataQuery",
                       "spec": {
-                        "expr": "polylens_device_last_config_request_seconds{tenant_id=~\"$tenant\",site_name=~\"$site\",device_name=~\"$device\"}",
+                        "expr": "max without (service_version) (polylens_device_last_config_request_seconds{tenant_id=~\"$tenant\",site_name=~\"$site\",device_name=~\"$device\"})",
                         "format": "time_series",
                         "instant": false,
                         "legendFormat": "{{device_name}}",
@@ -697,7 +697,7 @@
                       "group": "",
                       "kind": "DataQuery",
                       "spec": {
-                        "expr": "polylens_stream_connected{tenant_id=~\"$tenant\"}",
+                        "expr": "max without (service_version) (polylens_stream_connected{tenant_id=~\"$tenant\"})",
                         "format": "time_series",
                         "instant": false,
                         "legendFormat": "stream",
@@ -775,7 +775,7 @@
                       "group": "",
                       "kind": "DataQuery",
                       "spec": {
-                        "expr": "polylens_device_firmware_info{tenant_id=~\"$tenant\",site_name=~\"$site\",device_name=~\"$device\"}",
+                        "expr": "max without (service_version) (polylens_device_firmware_info{tenant_id=~\"$tenant\",site_name=~\"$site\",device_name=~\"$device\"})",
                         "format": "table",
                         "instant": true,
                         "legendFormat": "",
@@ -797,7 +797,7 @@
                       "group": "",
                       "kind": "DataQuery",
                       "spec": {
-                        "expr": "polylens_device_firmware_current{tenant_id=~\"$tenant\",site_name=~\"$site\",device_name=~\"$device\"}",
+                        "expr": "max without (service_version) (polylens_device_firmware_current{tenant_id=~\"$tenant\",site_name=~\"$site\",device_name=~\"$device\"})",
                         "format": "table",
                         "instant": true,
                         "legendFormat": "",
@@ -854,7 +854,7 @@
                       "group": "",
                       "kind": "DataQuery",
                       "spec": {
-                        "expr": "sum(polyphone_api_state{tenant_id=~\"$tenant\",site_name=~\"$site\",device_name=~\"$device\",state=\"ok\"})",
+                        "expr": "sum(max without (service_version) (polyphone_api_state{tenant_id=~\"$tenant\",site_name=~\"$site\",device_name=~\"$device\",state=\"ok\"}))",
                         "format": "time_series",
                         "instant": true,
                         "legendFormat": "",
@@ -921,7 +921,7 @@
                       "group": "",
                       "kind": "DataQuery",
                       "spec": {
-                        "expr": "polylens_device_active_calls{tenant_id=~\"$tenant\",site_name=~\"$site\",device_name=~\"$device\"}",
+                        "expr": "max without (service_version) (polylens_device_active_calls{tenant_id=~\"$tenant\",site_name=~\"$site\",device_name=~\"$device\"})",
                         "format": "time_series",
                         "instant": false,
                         "legendFormat": "{{device_name}} {{state}}",
@@ -999,7 +999,7 @@
                       "group": "",
                       "kind": "DataQuery",
                       "spec": {
-                        "expr": "polyphone_api_state{tenant_id=~\"$tenant\",site_name=~\"$site\",device_name=~\"$device\"}",
+                        "expr": "max without (service_version) (polyphone_api_state{tenant_id=~\"$tenant\",site_name=~\"$site\",device_name=~\"$device\"})",
                         "format": "table",
                         "instant": true,
                         "legendFormat": "",
@@ -1056,7 +1056,7 @@
                       "group": "",
                       "kind": "DataQuery",
                       "spec": {
-                        "expr": "polyphone_line_registered{tenant_id=~\"$tenant\",site_name=~\"$site\",device_name=~\"$device\"}",
+                        "expr": "max without (service_version) (polyphone_line_registered{tenant_id=~\"$tenant\",site_name=~\"$site\",device_name=~\"$device\"})",
                         "format": "time_series",
                         "instant": false,
                         "legendFormat": "{{device_name}} line {{line}}",
@@ -1134,7 +1134,7 @@
                       "group": "",
                       "kind": "DataQuery",
                       "spec": {
-                        "expr": "polyphone_lines_total{tenant_id=~\"$tenant\",site_name=~\"$site\",device_name=~\"$device\"}",
+                        "expr": "max without (service_version) (polyphone_lines_total{tenant_id=~\"$tenant\",site_name=~\"$site\",device_name=~\"$device\"})",
                         "format": "time_series",
                         "instant": false,
                         "legendFormat": "{{device_name}}",
@@ -1212,7 +1212,7 @@
                       "group": "",
                       "kind": "DataQuery",
                       "spec": {
-                        "expr": "polyphone_uptime_seconds{tenant_id=~\"$tenant\",site_name=~\"$site\",device_name=~\"$device\"}",
+                        "expr": "max without (service_version) (polyphone_uptime_seconds{tenant_id=~\"$tenant\",site_name=~\"$site\",device_name=~\"$device\"})",
                         "format": "time_series",
                         "instant": false,
                         "legendFormat": "{{device_name}}",
@@ -1290,7 +1290,7 @@
                       "group": "",
                       "kind": "DataQuery",
                       "spec": {
-                        "expr": "rate(polyphone_network_packets_total{tenant_id=~\"$tenant\",site_name=~\"$site\",device_name=~\"$device\"}[$__rate_interval])",
+                        "expr": "sum without (service_version) (rate(polyphone_network_packets_total{tenant_id=~\"$tenant\",site_name=~\"$site\",device_name=~\"$device\"}[$__rate_interval]))",
                         "format": "time_series",
                         "instant": false,
                         "legendFormat": "{{device_name}} {{direction}}",
@@ -1368,7 +1368,7 @@
                       "group": "",
                       "kind": "DataQuery",
                       "spec": {
-                        "expr": "polyphone_network_info{tenant_id=~\"$tenant\",site_name=~\"$site\",device_name=~\"$device\"}",
+                        "expr": "max without (service_version) (polyphone_network_info{tenant_id=~\"$tenant\",site_name=~\"$site\",device_name=~\"$device\"})",
                         "format": "table",
                         "instant": true,
                         "legendFormat": "",
@@ -1425,7 +1425,7 @@
                       "group": "",
                       "kind": "DataQuery",
                       "spec": {
-                        "expr": "polyphone_config_param_source{tenant_id=~\"$tenant\",site_name=~\"$site\",device_name=~\"$device\"}",
+                        "expr": "max without (service_version) (polyphone_config_param_source{tenant_id=~\"$tenant\",site_name=~\"$site\",device_name=~\"$device\"})",
                         "format": "table",
                         "instant": true,
                         "legendFormat": "",
@@ -1482,7 +1482,7 @@
                       "group": "",
                       "kind": "DataQuery",
                       "spec": {
-                        "expr": "rate(polyphone_calls_total{tenant_id=~\"$tenant\",site_name=~\"$site\",device_name=~\"$device\"}[$__rate_interval])",
+                        "expr": "sum without (service_version) (rate(polyphone_calls_total{tenant_id=~\"$tenant\",site_name=~\"$site\",device_name=~\"$device\"}[$__rate_interval]))",
                         "format": "time_series",
                         "instant": false,
                         "legendFormat": "{{device_name}} {{direction}}",
@@ -1560,7 +1560,7 @@
                       "group": "",
                       "kind": "DataQuery",
                       "spec": {
-                        "expr": "{service_name=\"polylens2otel\"} | event_name=\"polylens.cdr\" | tenant_id=~\"$tenant\" | unwrap duration_seconds | __error__=\"\"",
+                        "expr": "sum(rate({service_name=\"polylens2otel\"} | event_name=\"polylens.cdr\" | tenant_id=~\"$tenant\" [$__rate_interval]))",
                         "legendFormat": "",
                         "maxLines": 100,
                         "queryType": "range"
@@ -1575,7 +1575,7 @@
               "transformations": []
             }
           },
-          "description": "Durations of Lens CDR rows. Empty means no calls in the selected range.",
+          "description": "Rate of Lens CDR rows. Empty means no calls in the selected range.",
           "id": 29,
           "links": [],
           "title": "Lens CDR records",
@@ -1595,7 +1595,7 @@
                     "spanNulls": true
                   },
                   "noValue": "No data in the selected time range.",
-                  "unit": "s"
+                  "unit": "ops"
                 },
                 "overrides": []
               },
@@ -1637,7 +1637,7 @@
                       "group": "",
                       "kind": "DataQuery",
                       "spec": {
-                        "expr": "sum(polyphone_line_registered{tenant_id=~\"$tenant\",site_name=~\"$site\",device_name=~\"$device\"})",
+                        "expr": "sum(max without (service_version) (polyphone_line_registered{tenant_id=~\"$tenant\",site_name=~\"$site\",device_name=~\"$device\"}))",
                         "format": "time_series",
                         "instant": true,
                         "legendFormat": "",
@@ -1826,7 +1826,7 @@
                       "group": "",
                       "kind": "DataQuery",
                       "spec": {
-                        "expr": "polylens2otel_build_info{tenant_id=~\"$tenant\"}",
+                        "expr": "topk by (tenant_id) (1, timestamp(polylens2otel_build_info{tenant_id=~\"$tenant\"}))",
                         "format": "table",
                         "instant": true,
                         "legendFormat": "",
@@ -1883,7 +1883,7 @@
                       "group": "",
                       "kind": "DataQuery",
                       "spec": {
-                        "expr": "polylens2otel_collector_availability{tenant_id=~\"$tenant\",collector_id=~\"$collector\"}",
+                        "expr": "max without (service_version) (polylens2otel_collector_availability{tenant_id=~\"$tenant\",collector_id=~\"$collector\"})",
                         "format": "time_series",
                         "instant": false,
                         "legendFormat": "{{collector_id}}",
@@ -1961,7 +1961,7 @@
                       "group": "",
                       "kind": "DataQuery",
                       "spec": {
-                        "expr": "polylens2otel_collector_duration{tenant_id=~\"$tenant\",collector_id=~\"$collector\"}",
+                        "expr": "max without (service_version) (polylens2otel_collector_duration{tenant_id=~\"$tenant\",collector_id=~\"$collector\"})",
                         "format": "time_series",
                         "instant": false,
                         "legendFormat": "{{collector_id}}",
@@ -2039,7 +2039,7 @@
                       "group": "",
                       "kind": "DataQuery",
                       "spec": {
-                        "expr": "polylens2otel_collector_expected_interval{tenant_id=~\"$tenant\",collector_id=~\"$collector\"}",
+                        "expr": "max without (service_version) (polylens2otel_collector_expected_interval{tenant_id=~\"$tenant\",collector_id=~\"$collector\"})",
                         "format": "time_series",
                         "instant": false,
                         "legendFormat": "{{collector_id}}",
@@ -2117,7 +2117,7 @@
                       "group": "",
                       "kind": "DataQuery",
                       "spec": {
-                        "expr": "polylens2otel_http_client_request_duration{tenant_id=~\"$tenant\"}",
+                        "expr": "max without (service_version) (polylens2otel_http_client_request_duration{tenant_id=~\"$tenant\"})",
                         "format": "time_series",
                         "instant": false,
                         "legendFormat": "{{source}} {{device_name}}",
@@ -2195,7 +2195,7 @@
                       "group": "",
                       "kind": "DataQuery",
                       "spec": {
-                        "expr": "rate(polylens2otel_http_4xx_total{tenant_id=~\"$tenant\"}[$__rate_interval])",
+                        "expr": "sum without (service_version) (rate(polylens2otel_http_4xx_total{tenant_id=~\"$tenant\"}[$__rate_interval]))",
                         "format": "time_series",
                         "instant": false,
                         "legendFormat": "4xx {{source}}",
@@ -2217,7 +2217,7 @@
                       "group": "",
                       "kind": "DataQuery",
                       "spec": {
-                        "expr": "rate(polylens2otel_http_5xx_total{tenant_id=~\"$tenant\"}[$__rate_interval])",
+                        "expr": "sum without (service_version) (rate(polylens2otel_http_5xx_total{tenant_id=~\"$tenant\"}[$__rate_interval]))",
                         "format": "time_series",
                         "instant": false,
                         "legendFormat": "5xx {{source}}",
@@ -2233,10 +2233,10 @@
               "transformations": []
             }
           },
-          "description": "",
+          "description": "Includes expected Digest 401 challenges and API-disabled 404 classifications; use the 5xx headline for failures.",
           "id": 37,
           "links": [],
-          "title": "HTTP client errors",
+          "title": "HTTP response classes",
           "vizConfig": {
             "group": "timeseries",
             "kind": "VizConfig",
@@ -2295,7 +2295,7 @@
                       "group": "",
                       "kind": "DataQuery",
                       "spec": {
-                        "expr": "polylens2otel_api_unexpected{tenant_id=~\"$tenant\"}",
+                        "expr": "max without (service_version) (polylens2otel_api_unexpected{tenant_id=~\"$tenant\"})",
                         "format": "time_series",
                         "instant": false,
                         "legendFormat": "{{source}} {{device_name}}",
@@ -2373,7 +2373,7 @@
                       "group": "",
                       "kind": "DataQuery",
                       "spec": {
-                        "expr": "rate(polylens2otel_auth_token_refresh_total{tenant_id=~\"$tenant\"}[$__rate_interval])",
+                        "expr": "sum without (service_version) (rate(polylens2otel_auth_token_refresh_total{tenant_id=~\"$tenant\"}[$__rate_interval]))",
                         "format": "time_series",
                         "instant": false,
                         "legendFormat": "refreshes/s",
@@ -2382,28 +2382,6 @@
                       "version": "v0"
                     },
                     "refId": "A"
-                  }
-                },
-                {
-                  "kind": "PanelQuery",
-                  "spec": {
-                    "hidden": false,
-                    "query": {
-                      "datasource": {
-                        "name": "${ds_prometheus}"
-                      },
-                      "group": "",
-                      "kind": "DataQuery",
-                      "spec": {
-                        "expr": "polylens2otel_auth_token_expires_seconds{tenant_id=~\"$tenant\"}",
-                        "format": "time_series",
-                        "instant": false,
-                        "legendFormat": "expires in",
-                        "range": true
-                      },
-                      "version": "v0"
-                    },
-                    "refId": "B"
                   }
                 }
               ],
@@ -2414,7 +2392,7 @@
           "description": "",
           "id": 39,
           "links": [],
-          "title": "Lens token lifecycle",
+          "title": "Lens token refreshes",
           "vizConfig": {
             "group": "timeseries",
             "kind": "VizConfig",
@@ -2431,7 +2409,7 @@
                     "spanNulls": true
                   },
                   "noValue": "No data in the selected time range.",
-                  "unit": "s"
+                  "unit": "ops"
                 },
                 "overrides": []
               },
@@ -2473,7 +2451,7 @@
                       "group": "",
                       "kind": "DataQuery",
                       "spec": {
-                        "expr": "sum(polylens_device_active_calls{tenant_id=~\"$tenant\",site_name=~\"$site\",device_name=~\"$device\"})",
+                        "expr": "sum(max without (service_version) (polylens_device_active_calls{tenant_id=~\"$tenant\",site_name=~\"$site\",device_name=~\"$device\"})) or vector(0)",
                         "format": "time_series",
                         "instant": true,
                         "legendFormat": "",
@@ -2540,10 +2518,10 @@
                       "group": "",
                       "kind": "DataQuery",
                       "spec": {
-                        "expr": "rate(polylens2otel_stream_reconnects_total{tenant_id=~\"$tenant\"}[$__rate_interval])",
+                        "expr": "max without (service_version) (polylens2otel_auth_token_expires_seconds{tenant_id=~\"$tenant\"})",
                         "format": "time_series",
                         "instant": false,
-                        "legendFormat": "reconnects/s",
+                        "legendFormat": "expires in",
                         "range": true
                       },
                       "version": "v0"
@@ -2559,7 +2537,7 @@
           "description": "",
           "id": 40,
           "links": [],
-          "title": "Stream reconnects",
+          "title": "Lens token expiry",
           "vizConfig": {
             "group": "timeseries",
             "kind": "VizConfig",
@@ -2576,7 +2554,7 @@
                     "spanNulls": true
                   },
                   "noValue": "No data in the selected time range.",
-                  "unit": "ops"
+                  "unit": "s"
                 },
                 "overrides": []
               },
@@ -2618,10 +2596,10 @@
                       "group": "",
                       "kind": "DataQuery",
                       "spec": {
-                        "expr": "rate(polylens2otel_stream_messages_total{tenant_id=~\"$tenant\"}[$__rate_interval])",
+                        "expr": "sum without (service_version) (rate(polylens2otel_stream_reconnects_total{tenant_id=~\"$tenant\"}[$__rate_interval]))",
                         "format": "time_series",
                         "instant": false,
-                        "legendFormat": "messages/s",
+                        "legendFormat": "reconnects/s",
                         "range": true
                       },
                       "version": "v0"
@@ -2637,7 +2615,7 @@
           "description": "",
           "id": 41,
           "links": [],
-          "title": "Stream messages",
+          "title": "Stream reconnects",
           "vizConfig": {
             "group": "timeseries",
             "kind": "VizConfig",
@@ -2696,7 +2674,85 @@
                       "group": "",
                       "kind": "DataQuery",
                       "spec": {
-                        "expr": "polylens2otel_stream_last_message_seconds{tenant_id=~\"$tenant\"}",
+                        "expr": "sum without (service_version) (rate(polylens2otel_stream_messages_total{tenant_id=~\"$tenant\"}[$__rate_interval]))",
+                        "format": "time_series",
+                        "instant": false,
+                        "legendFormat": "messages/s",
+                        "range": true
+                      },
+                      "version": "v0"
+                    },
+                    "refId": "A"
+                  }
+                }
+              ],
+              "queryOptions": {},
+              "transformations": []
+            }
+          },
+          "description": "",
+          "id": 42,
+          "links": [],
+          "title": "Stream messages",
+          "vizConfig": {
+            "group": "timeseries",
+            "kind": "VizConfig",
+            "spec": {
+              "fieldConfig": {
+                "defaults": {
+                  "custom": {
+                    "drawStyle": "line",
+                    "fillOpacity": 15,
+                    "gradientMode": "none",
+                    "lineInterpolation": "linear",
+                    "lineWidth": 2,
+                    "showPoints": "never",
+                    "spanNulls": true
+                  },
+                  "noValue": "No data in the selected time range.",
+                  "unit": "ops"
+                },
+                "overrides": []
+              },
+              "options": {
+                "legend": {
+                  "calcs": [
+                    "lastNotNull",
+                    "max"
+                  ],
+                  "displayMode": "table",
+                  "placement": "bottom",
+                  "showLegend": true
+                },
+                "tooltip": {
+                  "mode": "multi",
+                  "sort": "desc"
+                }
+              }
+            },
+            "version": "12.1.0"
+          }
+        }
+      },
+      "panel-43": {
+        "kind": "Panel",
+        "spec": {
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "query": {
+                      "datasource": {
+                        "name": "${ds_prometheus}"
+                      },
+                      "group": "",
+                      "kind": "DataQuery",
+                      "spec": {
+                        "expr": "max without (service_version) (polylens2otel_stream_last_message_seconds{tenant_id=~\"$tenant\"})",
                         "format": "time_series",
                         "instant": false,
                         "legendFormat": "age",
@@ -2713,7 +2769,7 @@
             }
           },
           "description": "",
-          "id": 42,
+          "id": 43,
           "links": [],
           "title": "Time since stream message",
           "vizConfig": {
@@ -2756,7 +2812,7 @@
           }
         }
       },
-      "panel-43": {
+      "panel-44": {
         "kind": "Panel",
         "spec": {
           "data": {
@@ -2774,7 +2830,7 @@
                       "group": "",
                       "kind": "DataQuery",
                       "spec": {
-                        "expr": "rate(polylens2otel_ingest_emitted_points_total{tenant_id=~\"$tenant\",collector_id=~\"$collector\"}[$__rate_interval])",
+                        "expr": "sum without (service_version) (rate(polylens2otel_ingest_emitted_points_total{tenant_id=~\"$tenant\",collector_id=~\"$collector\"}[$__rate_interval]))",
                         "format": "time_series",
                         "instant": false,
                         "legendFormat": "{{collector_id}} emitted",
@@ -2796,7 +2852,7 @@
                       "group": "",
                       "kind": "DataQuery",
                       "spec": {
-                        "expr": "rate(polylens2otel_ingest_source_records_total{tenant_id=~\"$tenant\",collector_id=~\"$collector\"}[$__rate_interval])",
+                        "expr": "sum without (service_version) (rate(polylens2otel_ingest_source_records_total{tenant_id=~\"$tenant\",collector_id=~\"$collector\"}[$__rate_interval]))",
                         "format": "time_series",
                         "instant": false,
                         "legendFormat": "{{collector_id}} source",
@@ -2813,87 +2869,9 @@
             }
           },
           "description": "",
-          "id": 43,
-          "links": [],
-          "title": "Ingest accounting",
-          "vizConfig": {
-            "group": "timeseries",
-            "kind": "VizConfig",
-            "spec": {
-              "fieldConfig": {
-                "defaults": {
-                  "custom": {
-                    "drawStyle": "line",
-                    "fillOpacity": 15,
-                    "gradientMode": "none",
-                    "lineInterpolation": "linear",
-                    "lineWidth": 2,
-                    "showPoints": "never",
-                    "spanNulls": true
-                  },
-                  "noValue": "No data in the selected time range.",
-                  "unit": "ops"
-                },
-                "overrides": []
-              },
-              "options": {
-                "legend": {
-                  "calcs": [
-                    "lastNotNull",
-                    "max"
-                  ],
-                  "displayMode": "table",
-                  "placement": "bottom",
-                  "showLegend": true
-                },
-                "tooltip": {
-                  "mode": "multi",
-                  "sort": "desc"
-                }
-              }
-            },
-            "version": "12.1.0"
-          }
-        }
-      },
-      "panel-44": {
-        "kind": "Panel",
-        "spec": {
-          "data": {
-            "kind": "QueryGroup",
-            "spec": {
-              "queries": [
-                {
-                  "kind": "PanelQuery",
-                  "spec": {
-                    "hidden": false,
-                    "query": {
-                      "datasource": {
-                        "name": "${ds_prometheus}"
-                      },
-                      "group": "",
-                      "kind": "DataQuery",
-                      "spec": {
-                        "expr": "rate(polylens2otel_checkpoint_persist_errors_total{tenant_id=~\"$tenant\",collector_id=~\"$collector\"}[$__rate_interval])",
-                        "format": "time_series",
-                        "instant": false,
-                        "legendFormat": "{{collector_id}}",
-                        "range": true
-                      },
-                      "version": "v0"
-                    },
-                    "refId": "A"
-                  }
-                }
-              ],
-              "queryOptions": {},
-              "transformations": []
-            }
-          },
-          "description": "",
           "id": 44,
           "links": [],
-          "title": "Checkpoint persistence errors",
+          "title": "Ingest accounting",
           "vizConfig": {
             "group": "timeseries",
             "kind": "VizConfig",
@@ -2947,14 +2925,16 @@
                     "hidden": false,
                     "query": {
                       "datasource": {
-                        "name": "${ds_tempo}"
+                        "name": "${ds_prometheus}"
                       },
                       "group": "",
                       "kind": "DataQuery",
                       "spec": {
-                        "query": "{ resource.service.name = \"polylens2otel\" && name =~ \"collector\\..+\" && span.tenant.id =~ \"$tenant\" }",
-                        "queryType": "traceql",
-                        "tableType": "traces"
+                        "expr": "sum without (service_version) (rate(polylens2otel_checkpoint_persist_errors_total{tenant_id=~\"$tenant\",collector_id=~\"$collector\"}[$__rate_interval]))",
+                        "format": "time_series",
+                        "instant": false,
+                        "legendFormat": "{{collector_id}}",
+                        "range": true
                       },
                       "version": "v0"
                     },
@@ -2966,21 +2946,45 @@
               "transformations": []
             }
           },
-          "description": "One trace per scheduled collector run, with child HTTP calls.",
+          "description": "",
           "id": 45,
           "links": [],
-          "title": "Collector-run traces",
+          "title": "Checkpoint persistence errors",
           "vizConfig": {
-            "group": "traces",
+            "group": "timeseries",
             "kind": "VizConfig",
             "spec": {
               "fieldConfig": {
                 "defaults": {
-                  "noValue": "No data in the selected time range."
+                  "custom": {
+                    "drawStyle": "line",
+                    "fillOpacity": 15,
+                    "gradientMode": "none",
+                    "lineInterpolation": "linear",
+                    "lineWidth": 2,
+                    "showPoints": "never",
+                    "spanNulls": true
+                  },
+                  "noValue": "No data in the selected time range.",
+                  "unit": "ops"
                 },
                 "overrides": []
               },
-              "options": {}
+              "options": {
+                "legend": {
+                  "calcs": [
+                    "lastNotNull",
+                    "max"
+                  ],
+                  "displayMode": "table",
+                  "placement": "bottom",
+                  "showLegend": true
+                },
+                "tooltip": {
+                  "mode": "multi",
+                  "sort": "desc"
+                }
+              }
             },
             "version": "12.1.0"
           }
@@ -3004,8 +3008,11 @@
                       "group": "",
                       "kind": "DataQuery",
                       "spec": {
-                        "query": "{ resource.service.name = \"polylens2otel\" && name = \"http.client.request\" && span.tenant.id =~ \"$tenant\" }",
+                        "limit": 20,
+                        "metricsQueryType": "range",
+                        "query": "{ resource.service.name = \"polylens2otel\" && name =~ \"collector\\..+\" && span.tenant.id =~ \"$tenant\" && span.collector.id =~ \"$collector\" }",
                         "queryType": "traceql",
+                        "serviceMapUseNativeHistograms": false,
                         "tableType": "traces"
                       },
                       "version": "v0"
@@ -3018,12 +3025,12 @@
               "transformations": []
             }
           },
-          "description": "Instrumented Lens and phone HTTP calls.",
+          "description": "One trace per scheduled collector run, with child HTTP calls.",
           "id": 46,
           "links": [],
-          "title": "Outbound HTTP spans",
+          "title": "Collector-run traces",
           "vizConfig": {
-            "group": "traces",
+            "group": "table",
             "kind": "VizConfig",
             "spec": {
               "fieldConfig": {
@@ -3032,7 +3039,10 @@
                 },
                 "overrides": []
               },
-              "options": {}
+              "options": {
+                "cellHeight": "sm",
+                "showHeader": true
+              }
             },
             "version": "12.1.0"
           }
@@ -3056,8 +3066,11 @@
                       "group": "",
                       "kind": "DataQuery",
                       "spec": {
-                        "query": "{ resource.service.name = \"polylens2otel\" && name =~ \"collector\\..+\" && span.tenant.id =~ \"$tenant\" } | quantile_over_time(duration, 0.95) by (name)",
+                        "limit": 20,
+                        "metricsQueryType": "range",
+                        "query": "{ resource.service.name = \"polylens2otel\" && name = \"http.client.request\" && span.tenant.id =~ \"$tenant\" }",
                         "queryType": "traceql",
+                        "serviceMapUseNativeHistograms": false,
                         "tableType": "traces"
                       },
                       "version": "v0"
@@ -3070,44 +3083,23 @@
               "transformations": []
             }
           },
-          "description": "",
+          "description": "Instrumented Lens and phone HTTP calls.",
           "id": 47,
           "links": [],
-          "title": "Collector p95 duration",
+          "title": "Outbound HTTP spans",
           "vizConfig": {
-            "group": "timeseries",
+            "group": "table",
             "kind": "VizConfig",
             "spec": {
               "fieldConfig": {
                 "defaults": {
-                  "custom": {
-                    "drawStyle": "line",
-                    "fillOpacity": 15,
-                    "gradientMode": "none",
-                    "lineInterpolation": "linear",
-                    "lineWidth": 2,
-                    "showPoints": "never",
-                    "spanNulls": true
-                  },
-                  "noValue": "No data in the selected time range.",
-                  "unit": "s"
+                  "noValue": "No data in the selected time range."
                 },
                 "overrides": []
               },
               "options": {
-                "legend": {
-                  "calcs": [
-                    "lastNotNull",
-                    "max"
-                  ],
-                  "displayMode": "table",
-                  "placement": "bottom",
-                  "showLegend": true
-                },
-                "tooltip": {
-                  "mode": "multi",
-                  "sort": "desc"
-                }
+                "cellHeight": "sm",
+                "showHeader": true
               }
             },
             "version": "12.1.0"
@@ -3132,8 +3124,11 @@
                       "group": "",
                       "kind": "DataQuery",
                       "spec": {
-                        "query": "{ resource.service.name = \"polylens2otel\" && name = \"http.client.request\" && span.tenant.id =~ \"$tenant\" } | quantile_over_time(duration, 0.95) by (span.source)",
+                        "limit": 20,
+                        "metricsQueryType": "range",
+                        "query": "{ resource.service.name = \"polylens2otel\" && name =~ \"collector\\..+\" && span.tenant.id =~ \"$tenant\" && span.collector.id =~ \"$collector\" } | quantile_over_time(duration, 0.95) by (span.collector.id)",
                         "queryType": "traceql",
+                        "serviceMapUseNativeHistograms": false,
                         "tableType": "traces"
                       },
                       "version": "v0"
@@ -3149,7 +3144,7 @@
           "description": "",
           "id": 48,
           "links": [],
-          "title": "HTTP p95 by source",
+          "title": "Collector p95 duration",
           "vizConfig": {
             "group": "timeseries",
             "kind": "VizConfig",
@@ -3208,8 +3203,11 @@
                       "group": "",
                       "kind": "DataQuery",
                       "spec": {
-                        "query": "{ resource.service.name = \"polylens2otel\" && name =~ \"collector\\..+\" && span.tenant.id =~ \"$tenant\" } | rate() by (name)",
+                        "limit": 20,
+                        "metricsQueryType": "range",
+                        "query": "{ resource.service.name = \"polylens2otel\" && name = \"http.client.request\" && span.tenant.id =~ \"$tenant\" } | quantile_over_time(duration, 0.95) by (span.source)",
                         "queryType": "traceql",
+                        "serviceMapUseNativeHistograms": false,
                         "tableType": "traces"
                       },
                       "version": "v0"
@@ -3225,7 +3223,7 @@
           "description": "",
           "id": 49,
           "links": [],
-          "title": "Collector run rate",
+          "title": "HTTP p95 by source",
           "vizConfig": {
             "group": "timeseries",
             "kind": "VizConfig",
@@ -3242,7 +3240,7 @@
                     "spanNulls": true
                   },
                   "noValue": "No data in the selected time range.",
-                  "unit": "ops"
+                  "unit": "s"
                 },
                 "overrides": []
               },
@@ -3284,7 +3282,7 @@
                       "group": "",
                       "kind": "DataQuery",
                       "spec": {
-                        "expr": "sum(polylens2otel_collector_availability{tenant_id=~\"$tenant\",collector_id=~\"$collector\"})",
+                        "expr": "sum(max without (service_version) (polylens2otel_collector_availability{tenant_id=~\"$tenant\",collector_id=~\"$collector\"}))",
                         "format": "time_series",
                         "instant": true,
                         "legendFormat": "",
@@ -3351,8 +3349,11 @@
                       "group": "",
                       "kind": "DataQuery",
                       "spec": {
-                        "query": "{ resource.service.name = \"polylens2otel\" && name = \"http.client.request\" && span.tenant.id =~ \"$tenant\" } | rate() by (span.source)",
+                        "limit": 20,
+                        "metricsQueryType": "range",
+                        "query": "{ resource.service.name = \"polylens2otel\" && name =~ \"collector\\..+\" && span.tenant.id =~ \"$tenant\" && span.collector.id =~ \"$collector\" } | rate() by (span.collector.id)",
                         "queryType": "traceql",
+                        "serviceMapUseNativeHistograms": false,
                         "tableType": "traces"
                       },
                       "version": "v0"
@@ -3368,7 +3369,7 @@
           "description": "",
           "id": 50,
           "links": [],
-          "title": "HTTP request rate",
+          "title": "Collector run rate",
           "vizConfig": {
             "group": "timeseries",
             "kind": "VizConfig",
@@ -3422,15 +3423,17 @@
                     "hidden": false,
                     "query": {
                       "datasource": {
-                        "name": "${ds_profiles}"
+                        "name": "${ds_tempo}"
                       },
                       "group": "",
                       "kind": "DataQuery",
                       "spec": {
-                        "groupBy": [],
-                        "labelSelector": "{service_name=\"polylens2otel\"}",
-                        "profileTypeId": "process_cpu:cpu:nanoseconds:cpu:nanoseconds",
-                        "queryType": "profile"
+                        "limit": 20,
+                        "metricsQueryType": "range",
+                        "query": "{ resource.service.name = \"polylens2otel\" && name = \"http.client.request\" && span.tenant.id =~ \"$tenant\" } | rate() by (span.source)",
+                        "queryType": "traceql",
+                        "serviceMapUseNativeHistograms": false,
+                        "tableType": "traces"
                       },
                       "version": "v0"
                     },
@@ -3442,21 +3445,45 @@
               "transformations": []
             }
           },
-          "description": "Pyroscope profile type `process_cpu:cpu:nanoseconds:cpu:nanoseconds` for polylens2otel.",
+          "description": "",
           "id": 51,
           "links": [],
-          "title": "CPU time flame graph",
+          "title": "HTTP request rate",
           "vizConfig": {
-            "group": "flamegraph",
+            "group": "timeseries",
             "kind": "VizConfig",
             "spec": {
               "fieldConfig": {
                 "defaults": {
-                  "noValue": "This profile type has no samples in the selected time range."
+                  "custom": {
+                    "drawStyle": "line",
+                    "fillOpacity": 15,
+                    "gradientMode": "none",
+                    "lineInterpolation": "linear",
+                    "lineWidth": 2,
+                    "showPoints": "never",
+                    "spanNulls": true
+                  },
+                  "noValue": "No data in the selected time range.",
+                  "unit": "ops"
                 },
                 "overrides": []
               },
-              "options": {}
+              "options": {
+                "legend": {
+                  "calcs": [
+                    "lastNotNull",
+                    "max"
+                  ],
+                  "displayMode": "table",
+                  "placement": "bottom",
+                  "showLegend": true
+                },
+                "tooltip": {
+                  "mode": "multi",
+                  "sort": "desc"
+                }
+              }
             },
             "version": "12.1.0"
           }
@@ -3482,7 +3509,7 @@
                       "spec": {
                         "groupBy": [],
                         "labelSelector": "{service_name=\"polylens2otel\"}",
-                        "profileTypeId": "process_cpu:samples:count:cpu:nanoseconds",
+                        "profileTypeId": "process_cpu:cpu:nanoseconds:cpu:nanoseconds",
                         "queryType": "profile"
                       },
                       "version": "v0"
@@ -3495,10 +3522,10 @@
               "transformations": []
             }
           },
-          "description": "Pyroscope profile type `process_cpu:samples:count:cpu:nanoseconds` for polylens2otel.",
+          "description": "Pyroscope profile type `process_cpu:cpu:nanoseconds:cpu:nanoseconds` for polylens2otel.",
           "id": 52,
           "links": [],
-          "title": "CPU samples flame graph",
+          "title": "CPU time flame graph",
           "vizConfig": {
             "group": "flamegraph",
             "kind": "VizConfig",
@@ -3535,7 +3562,7 @@
                       "spec": {
                         "groupBy": [],
                         "labelSelector": "{service_name=\"polylens2otel\"}",
-                        "profileTypeId": "memory:alloc_objects:count:space:bytes",
+                        "profileTypeId": "process_cpu:samples:count:cpu:nanoseconds",
                         "queryType": "profile"
                       },
                       "version": "v0"
@@ -3548,10 +3575,10 @@
               "transformations": []
             }
           },
-          "description": "Pyroscope profile type `memory:alloc_objects:count:space:bytes` for polylens2otel.",
+          "description": "Pyroscope profile type `process_cpu:samples:count:cpu:nanoseconds` for polylens2otel.",
           "id": 53,
           "links": [],
-          "title": "Allocated objects flame graph",
+          "title": "CPU samples flame graph",
           "vizConfig": {
             "group": "flamegraph",
             "kind": "VizConfig",
@@ -3588,7 +3615,7 @@
                       "spec": {
                         "groupBy": [],
                         "labelSelector": "{service_name=\"polylens2otel\"}",
-                        "profileTypeId": "memory:alloc_space:bytes:space:bytes",
+                        "profileTypeId": "memory:alloc_objects:count:space:bytes",
                         "queryType": "profile"
                       },
                       "version": "v0"
@@ -3601,10 +3628,10 @@
               "transformations": []
             }
           },
-          "description": "Pyroscope profile type `memory:alloc_space:bytes:space:bytes` for polylens2otel.",
+          "description": "Pyroscope profile type `memory:alloc_objects:count:space:bytes` for polylens2otel.",
           "id": 54,
           "links": [],
-          "title": "Allocated bytes flame graph",
+          "title": "Allocated objects flame graph",
           "vizConfig": {
             "group": "flamegraph",
             "kind": "VizConfig",
@@ -3641,7 +3668,7 @@
                       "spec": {
                         "groupBy": [],
                         "labelSelector": "{service_name=\"polylens2otel\"}",
-                        "profileTypeId": "memory:inuse_objects:count:space:bytes",
+                        "profileTypeId": "memory:alloc_space:bytes:space:bytes",
                         "queryType": "profile"
                       },
                       "version": "v0"
@@ -3654,10 +3681,10 @@
               "transformations": []
             }
           },
-          "description": "Pyroscope profile type `memory:inuse_objects:count:space:bytes` for polylens2otel.",
+          "description": "Pyroscope profile type `memory:alloc_space:bytes:space:bytes` for polylens2otel.",
           "id": 55,
           "links": [],
-          "title": "In-use objects flame graph",
+          "title": "Allocated bytes flame graph",
           "vizConfig": {
             "group": "flamegraph",
             "kind": "VizConfig",
@@ -3694,6 +3721,59 @@
                       "spec": {
                         "groupBy": [],
                         "labelSelector": "{service_name=\"polylens2otel\"}",
+                        "profileTypeId": "memory:inuse_objects:count:space:bytes",
+                        "queryType": "profile"
+                      },
+                      "version": "v0"
+                    },
+                    "refId": "A"
+                  }
+                }
+              ],
+              "queryOptions": {},
+              "transformations": []
+            }
+          },
+          "description": "Pyroscope profile type `memory:inuse_objects:count:space:bytes` for polylens2otel.",
+          "id": 56,
+          "links": [],
+          "title": "In-use objects flame graph",
+          "vizConfig": {
+            "group": "flamegraph",
+            "kind": "VizConfig",
+            "spec": {
+              "fieldConfig": {
+                "defaults": {
+                  "noValue": "This profile type has no samples in the selected time range."
+                },
+                "overrides": []
+              },
+              "options": {}
+            },
+            "version": "12.1.0"
+          }
+        }
+      },
+      "panel-57": {
+        "kind": "Panel",
+        "spec": {
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "query": {
+                      "datasource": {
+                        "name": "${ds_profiles}"
+                      },
+                      "group": "",
+                      "kind": "DataQuery",
+                      "spec": {
+                        "groupBy": [],
+                        "labelSelector": "{service_name=\"polylens2otel\"}",
                         "profileTypeId": "memory:inuse_space:bytes:space:bytes",
                         "queryType": "profile"
                       },
@@ -3708,7 +3788,7 @@
             }
           },
           "description": "Pyroscope profile type `memory:inuse_space:bytes:space:bytes` for polylens2otel.",
-          "id": 56,
+          "id": 57,
           "links": [],
           "title": "In-use bytes flame graph",
           "vizConfig": {
@@ -3745,7 +3825,7 @@
                       "group": "",
                       "kind": "DataQuery",
                       "spec": {
-                        "expr": "sum(increase(polylens2otel_http_4xx_total{tenant_id=~\"$tenant\"}[1h])) + sum(increase(polylens2otel_http_5xx_total{tenant_id=~\"$tenant\"}[1h]))",
+                        "expr": "sum(increase(polylens2otel_http_5xx_total{tenant_id=~\"$tenant\"}[1h])) or vector(0)",
                         "format": "time_series",
                         "instant": true,
                         "legendFormat": "",
@@ -3761,10 +3841,10 @@
               "transformations": []
             }
           },
-          "description": "Lens and phone client HTTP 4xx/5xx responses over the last hour.",
+          "description": "Unexpected upstream server failures. Digest 401 challenges are intentionally excluded.",
           "id": 6,
           "links": [],
-          "title": "HTTP errors (1h)",
+          "title": "HTTP 5xx (1h)",
           "vizConfig": {
             "group": "stat",
             "kind": "VizConfig",
@@ -3825,7 +3905,7 @@
                       "group": "",
                       "kind": "DataQuery",
                       "spec": {
-                        "expr": "polylens_device_connected{tenant_id=~\"$tenant\",site_name=~\"$site\",device_name=~\"$device\"}",
+                        "expr": "max without (service_version) (polylens_device_connected{tenant_id=~\"$tenant\",site_name=~\"$site\",device_name=~\"$device\"})",
                         "format": "time_series",
                         "instant": false,
                         "legendFormat": "{{device_name}} Lens",
@@ -3847,7 +3927,7 @@
                       "group": "",
                       "kind": "DataQuery",
                       "spec": {
-                        "expr": "polyphone_api_state{tenant_id=~\"$tenant\",site_name=~\"$site\",device_name=~\"$device\",state=\"ok\"}",
+                        "expr": "max without (service_version) (polyphone_api_state{tenant_id=~\"$tenant\",site_name=~\"$site\",device_name=~\"$device\",state=\"ok\"})",
                         "format": "time_series",
                         "instant": false,
                         "legendFormat": "{{device_name}} phone API",
@@ -3869,7 +3949,7 @@
                       "group": "",
                       "kind": "DataQuery",
                       "spec": {
-                        "expr": "polyphone_line_registered{tenant_id=~\"$tenant\",site_name=~\"$site\",device_name=~\"$device\"}",
+                        "expr": "max without (service_version) (polyphone_line_registered{tenant_id=~\"$tenant\",site_name=~\"$site\",device_name=~\"$device\"})",
                         "format": "time_series",
                         "instant": false,
                         "legendFormat": "{{device_name}} line {{line}}",
@@ -3947,7 +4027,7 @@
                       "group": "",
                       "kind": "DataQuery",
                       "spec": {
-                        "expr": "polylens2otel_collector_duration{tenant_id=~\"$tenant\",collector_id=~\"$collector\"}",
+                        "expr": "max without (service_version) (polylens2otel_collector_duration{tenant_id=~\"$tenant\",collector_id=~\"$collector\"})",
                         "format": "time_series",
                         "instant": false,
                         "legendFormat": "{{collector_id}} duration",
@@ -3969,7 +4049,7 @@
                       "group": "",
                       "kind": "DataQuery",
                       "spec": {
-                        "expr": "polylens2otel_collector_expected_interval{tenant_id=~\"$tenant\",collector_id=~\"$collector\"}",
+                        "expr": "max without (service_version) (polylens2otel_collector_expected_interval{tenant_id=~\"$tenant\",collector_id=~\"$collector\"})",
                         "format": "time_series",
                         "instant": false,
                         "legendFormat": "{{collector_id}} interval",
@@ -4047,7 +4127,7 @@
                       "group": "",
                       "kind": "DataQuery",
                       "spec": {
-                        "expr": "polylens_device_connected{tenant_id=~\"$tenant\",site_name=~\"$site\",device_name=~\"$device\"}",
+                        "expr": "max without (service_version) (polylens_device_connected{tenant_id=~\"$tenant\",site_name=~\"$site\",device_name=~\"$device\"})",
                         "format": "time_series",
                         "instant": true,
                         "legendFormat": "",
@@ -4348,7 +4428,7 @@
                           "mode": "variable",
                           "value": "device"
                         },
-                        "title": "Per-device health"
+                        "title": "Per-device health: $device"
                       }
                     }
                   ]
@@ -4833,6 +4913,19 @@
                                   "x": 12,
                                   "y": 7
                                 }
+                              },
+                              {
+                                "kind": "GridLayoutItem",
+                                "spec": {
+                                  "element": {
+                                    "kind": "ElementReference",
+                                    "name": "panel-40"
+                                  },
+                                  "height": 7,
+                                  "width": 12,
+                                  "x": 0,
+                                  "y": 14
+                                }
                               }
                             ]
                           }
@@ -4853,24 +4946,11 @@
                                 "spec": {
                                   "element": {
                                     "kind": "ElementReference",
-                                    "name": "panel-40"
-                                  },
-                                  "height": 7,
-                                  "width": 12,
-                                  "x": 0,
-                                  "y": 0
-                                }
-                              },
-                              {
-                                "kind": "GridLayoutItem",
-                                "spec": {
-                                  "element": {
-                                    "kind": "ElementReference",
                                     "name": "panel-41"
                                   },
                                   "height": 7,
                                   "width": 12,
-                                  "x": 12,
+                                  "x": 0,
                                   "y": 0
                                 }
                               },
@@ -4883,6 +4963,19 @@
                                   },
                                   "height": 7,
                                   "width": 12,
+                                  "x": 12,
+                                  "y": 0
+                                }
+                              },
+                              {
+                                "kind": "GridLayoutItem",
+                                "spec": {
+                                  "element": {
+                                    "kind": "ElementReference",
+                                    "name": "panel-43"
+                                  },
+                                  "height": 7,
+                                  "width": 12,
                                   "x": 0,
                                   "y": 7
                                 }
@@ -4892,7 +4985,7 @@
                                 "spec": {
                                   "element": {
                                     "kind": "ElementReference",
-                                    "name": "panel-43"
+                                    "name": "panel-44"
                                   },
                                   "height": 7,
                                   "width": 12,
@@ -4905,7 +4998,7 @@
                                 "spec": {
                                   "element": {
                                     "kind": "ElementReference",
-                                    "name": "panel-44"
+                                    "name": "panel-45"
                                   },
                                   "height": 7,
                                   "width": 12,
@@ -4945,7 +5038,7 @@
                                 "spec": {
                                   "element": {
                                     "kind": "ElementReference",
-                                    "name": "panel-45"
+                                    "name": "panel-46"
                                   },
                                   "height": 10,
                                   "width": 24,
@@ -4958,7 +5051,7 @@
                                 "spec": {
                                   "element": {
                                     "kind": "ElementReference",
-                                    "name": "panel-46"
+                                    "name": "panel-47"
                                   },
                                   "height": 10,
                                   "width": 24,
@@ -4985,24 +5078,11 @@
                                 "spec": {
                                   "element": {
                                     "kind": "ElementReference",
-                                    "name": "panel-47"
-                                  },
-                                  "height": 7,
-                                  "width": 12,
-                                  "x": 0,
-                                  "y": 0
-                                }
-                              },
-                              {
-                                "kind": "GridLayoutItem",
-                                "spec": {
-                                  "element": {
-                                    "kind": "ElementReference",
                                     "name": "panel-48"
                                   },
                                   "height": 7,
                                   "width": 12,
-                                  "x": 12,
+                                  "x": 0,
                                   "y": 0
                                 }
                               },
@@ -5015,6 +5095,19 @@
                                   },
                                   "height": 7,
                                   "width": 12,
+                                  "x": 12,
+                                  "y": 0
+                                }
+                              },
+                              {
+                                "kind": "GridLayoutItem",
+                                "spec": {
+                                  "element": {
+                                    "kind": "ElementReference",
+                                    "name": "panel-50"
+                                  },
+                                  "height": 7,
+                                  "width": 12,
                                   "x": 0,
                                   "y": 7
                                 }
@@ -5024,7 +5117,7 @@
                                 "spec": {
                                   "element": {
                                     "kind": "ElementReference",
-                                    "name": "panel-50"
+                                    "name": "panel-51"
                                   },
                                   "height": 7,
                                   "width": 12,
@@ -5064,24 +5157,11 @@
                                 "spec": {
                                   "element": {
                                     "kind": "ElementReference",
-                                    "name": "panel-51"
-                                  },
-                                  "height": 10,
-                                  "width": 12,
-                                  "x": 0,
-                                  "y": 0
-                                }
-                              },
-                              {
-                                "kind": "GridLayoutItem",
-                                "spec": {
-                                  "element": {
-                                    "kind": "ElementReference",
                                     "name": "panel-52"
                                   },
                                   "height": 10,
                                   "width": 12,
-                                  "x": 12,
+                                  "x": 0,
                                   "y": 0
                                 }
                               },
@@ -5094,8 +5174,8 @@
                                   },
                                   "height": 10,
                                   "width": 12,
-                                  "x": 0,
-                                  "y": 10
+                                  "x": 12,
+                                  "y": 0
                                 }
                               },
                               {
@@ -5107,7 +5187,7 @@
                                   },
                                   "height": 10,
                                   "width": 12,
-                                  "x": 12,
+                                  "x": 0,
                                   "y": 10
                                 }
                               },
@@ -5120,6 +5200,19 @@
                                   },
                                   "height": 10,
                                   "width": 12,
+                                  "x": 12,
+                                  "y": 10
+                                }
+                              },
+                              {
+                                "kind": "GridLayoutItem",
+                                "spec": {
+                                  "element": {
+                                    "kind": "ElementReference",
+                                    "name": "panel-56"
+                                  },
+                                  "height": 10,
+                                  "width": 12,
                                   "x": 0,
                                   "y": 20
                                 }
@@ -5129,7 +5222,7 @@
                                 "spec": {
                                   "element": {
                                     "kind": "ElementReference",
-                                    "name": "panel-56"
+                                    "name": "panel-57"
                                   },
                                   "height": 10,
                                   "width": 12,
