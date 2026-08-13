@@ -274,6 +274,15 @@
               "fieldConfig": {
                 "defaults": {
                   "noValue": "No data in the selected time range.",
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "color": "green",
+                        "value": null
+                      }
+                    ]
+                  },
                   "unit": "s"
                 },
                 "overrides": []

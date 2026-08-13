@@ -142,6 +142,14 @@ class GeneratedArtefactTests(unittest.TestCase):
         self.assertIn("polylens2otel_http_5xx_total", query)
         self.assertNotIn("polylens2otel_http_4xx_total", query)
 
+    def test_uptime_stat_does_not_use_grafanas_misleading_default_threshold(self):
+        dashboard = build_dashboard.render()
+        defaults = self._panel(dashboard, "Uptime")["spec"]["vizConfig"]["spec"]["fieldConfig"]["defaults"]
+        self.assertEqual(
+            defaults["thresholds"],
+            {"mode": "absolute", "steps": [{"value": None, "color": "green"}]},
+        )
+
     def test_rules_use_only_catalog_metric_names(self):
         rendered = build_rules.render()
         known = {metric["prometheus"] for metric in build_rules.catalog()["metrics"]}

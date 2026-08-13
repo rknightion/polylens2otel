@@ -132,7 +132,8 @@ def _overview(builder: v2.Builder) -> dict:
         _stat(builder, "Lens connected", v2.prometheus(_gauge(f"polylens_device_connected{{{FLEET}}}"), instant=True), unit="bool", mappings=BOOL_MAPPING),
         _stat(builder, "Phone API healthy", v2.prometheus(_gauge(f'polyphone_api_state{{{FLEET},state="ok"}}'), instant=True), unit="bool", mappings=BOOL_MAPPING),
         _stat(builder, "Lines registered", v2.prometheus(_current_total(f"polyphone_line_registered{{{FLEET}}}"), instant=True)),
-        _stat(builder, "Uptime", v2.prometheus(_gauge(f"polyphone_uptime_seconds{{{FLEET}}}"), instant=True), unit="s"),
+        _stat(builder, "Uptime", v2.prometheus(_gauge(f"polyphone_uptime_seconds{{{FLEET}}}"), instant=True), unit="s",
+              threshold_config=v2.thresholds((None, "green"))),
         _stat(builder, "Firmware current", v2.prometheus(_gauge(f"polylens_device_firmware_current{{{FLEET}}}"), instant=True), unit="bool", mappings=BOOL_MAPPING),
         _stat(builder, "Active calls", v2.prometheus(f"{_current_total(f'polylens_device_active_calls{{{FLEET}}}')} or vector(0)", instant=True)),
     ]
