@@ -99,6 +99,54 @@ func TestCallLogsCheckpointPreventsRestartReplay(t *testing.T) {
 	}
 }
 
+func TestCallLogsMigrateLegacyUTCCheckpointToPhoneTimezone(t *testing.T) {
+	t.Parallel()
+	stateDir := t.TempDir()
+	row := json.RawMessage(`{"LineNumber":"1","StartTime":"2026-08-13T11:15:00","RemotePartyName":"redacted","Duration":"15 secs"}`)
+	target := Target{
+		TenantID: "tenant-a",
+		Device:   telemetry.Device{ID: "deskie-id", Name: "deskie"},
+		API:      callLogAPI(phoneclient.CallLogs{Placed: []json.RawMessage{row}}),
+		StateDir: stateDir,
+	}
+	collector := newCallLogs([]Target{target}, stateDir, 5*time.Minute)
+	path := collector.watermarkPath(target)
+	if err := os.MkdirAll(filepath.Dir(path), 0o750); err != nil {
+		t.Fatalf("create checkpoint directory: %v", err)
+	}
+	legacy := []byte(`{"start_time":"2026-08-13T10:59:48Z","keys":["deskie-id\\u00002026-08-13T10:59:48"]}`)
+	if err := os.WriteFile(path, legacy, 0o600); err != nil {
+		t.Fatalf("write legacy checkpoint: %v", err)
+	}
+	recorder := telemetrytest.New()
+
+	if err := collector.Collect(context.Background(), recorder.Emitter()); err != nil {
+		t.Fatalf("collect call logs: %v", err)
+	}
+	logs := recorder.Logs()
+	wantUTC := time.Date(2026, time.August, 13, 10, 15, 0, 0, time.UTC)
+	if len(logs) != 1 || !logs[0].Timestamp.Equal(wantUTC) {
+		t.Fatalf("logs = %#v; want one call at %s after legacy checkpoint migration", logs, wantUTC)
+	}
+	body, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatalf("read migrated checkpoint: %v", err)
+	}
+	var saved map[string]any
+	if err := json.Unmarshal(body, &saved); err != nil {
+		t.Fatalf("decode migrated checkpoint: %v", err)
+	}
+	if saved["version"] != float64(1) {
+		t.Fatalf("checkpoint version = %#v; want 1", saved["version"])
+	}
+	if err := collector.Collect(context.Background(), recorder.Emitter()); err != nil {
+		t.Fatalf("collect migrated checkpoint again: %v", err)
+	}
+	if got := len(recorder.Logs()); got != 1 {
+		t.Fatalf("logs after restart = %d; want no replay", got)
+	}
+}
+
 func TestCallLogsUsePhoneTimezoneAcrossDaylightSaving(t *testing.T) {
 	t.Parallel()
 	tests := []struct {

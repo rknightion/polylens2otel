@@ -21,8 +21,9 @@ import (
 )
 
 const (
-	callLogsID         = "phone.call_logs"
-	phoneTimezoneParam = "tcpIpApp.sntp.olsonTimezoneID"
+	callLogsID              = "phone.call_logs"
+	callLogWatermarkVersion = 1
+	phoneTimezoneParam      = "tcpIpApp.sntp.olsonTimezoneID"
 )
 
 // NewCallLogs is the frozen wave-3 collector seam.
@@ -61,7 +62,7 @@ func (c *callLogsCollector) Collect(ctx context.Context, emitter telemetry.Emitt
 		if err != nil {
 			return fmt.Errorf("phone %s call-log timezone: %w", target.Device.ID, err)
 		}
-		checkpoint, err := c.loadWatermark(target)
+		checkpoint, err := c.loadWatermark(target, location)
 		if err != nil {
 			return fmt.Errorf("load phone %s call-log watermark: %w", target.Device.ID, err)
 		}
@@ -193,6 +194,7 @@ func durationSeconds(raw string) string {
 }
 
 type callLogWatermark struct {
+	Version   int      `json:"version"`
 	StartTime string   `json:"start_time"`
 	Keys      []string `json:"keys"`
 }
@@ -230,25 +232,45 @@ func (c *callLogsCollector) watermarkPath(target Target) string {
 	return filepath.Join(c.stateDir, callLogsID, hex.EncodeToString(sum[:])+".json")
 }
 
-func (c *callLogsCollector) loadWatermark(target Target) (callLogWatermark, error) {
+func (c *callLogsCollector) loadWatermark(target Target, location *time.Location) (callLogWatermark, error) {
 	if c.stateDir == "" {
-		return callLogWatermark{}, nil
+		return callLogWatermark{Version: callLogWatermarkVersion}, nil
 	}
 	body, err := os.ReadFile(c.watermarkPath(target))
 	if errors.Is(err, os.ErrNotExist) {
-		return callLogWatermark{}, nil
+		return callLogWatermark{Version: callLogWatermarkVersion}, nil
 	}
 	if err != nil {
 		return callLogWatermark{}, err
 	}
 	var watermark callLogWatermark
-	return watermark, json.Unmarshal(body, &watermark)
+	if err := json.Unmarshal(body, &watermark); err != nil {
+		return callLogWatermark{}, err
+	}
+	if watermark.Version == 0 {
+		watermark = migrateLegacyCallLogWatermark(watermark, location)
+	}
+	return watermark, nil
+}
+
+func migrateLegacyCallLogWatermark(watermark callLogWatermark, location *time.Location) callLogWatermark {
+	watermark.Version = callLogWatermarkVersion
+	legacy, err := time.Parse(time.RFC3339Nano, watermark.StartTime)
+	if err != nil {
+		return watermark
+	}
+	year, month, day := legacy.Date()
+	hour, minute, second := legacy.Clock()
+	corrected := time.Date(year, month, day, hour, minute, second, legacy.Nanosecond(), location)
+	watermark.StartTime = corrected.Format(time.RFC3339Nano)
+	return watermark
 }
 
 func (c *callLogsCollector) saveWatermark(target Target, watermark callLogWatermark) error {
 	if c.stateDir == "" {
 		return nil
 	}
+	watermark.Version = callLogWatermarkVersion
 	dir := filepath.Dir(c.watermarkPath(target))
 	if err := os.MkdirAll(dir, 0o750); err != nil {
 		return err
