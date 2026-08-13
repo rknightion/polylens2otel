@@ -1,0 +1,77 @@
+name: grafana-sync
+
+# Dashboards are owned by Grafana GitSync, so publication is a commit to the
+# GitSync repository rather than an out-of-band dashboard API update. Grafana
+# can write UI saves back to the same repository; the retry loop preserves
+# those concurrent commits.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'dashboards/**'
+      - 'grafana/**'
+      - 'spec/signal-catalog.json'
+      - '.github/workflows/grafana-sync.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: grafana-sync
+  cancel-in-progress: false
+
+jobs:
+  dashboards:
+    name: publish dashboard to GitSync
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Mint a scoped GitSync token
+        id: bao
+        uses: rknightion/.github/.github/actions/broker-token@06d6727487515cd6628e01696af6f886f1421e04
+        with:
+          permission-set: gitsync
+          role: gitsync-polylens2otel
+          tailscale-client-id: ${{ secrets.TS_WIF_CLIENT_ID }}
+          tailscale-audience: ${{ secrets.TS_WIF_AUDIENCE }}
+
+      - name: Check out the GitSync repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: rknightion/gc-gitsync-m7kni
+          token: ${{ steps.bao.outputs.token }}
+          path: gitsync
+
+      - name: Copy the generated resources into place
+        run: |
+          set -euo pipefail
+          mkdir -p gitsync/polylens2otel
+          cp dashboards/_folder.json gitsync/polylens2otel/_folder.json
+          cp dashboards/polylens2otel.json gitsync/polylens2otel/polylens2otel.json
+
+      - name: Commit and push
+        working-directory: gitsync
+        run: |
+          set -euo pipefail
+          git add polylens2otel/_folder.json polylens2otel/polylens2otel.json
+          if git diff --cached --quiet; then
+            echo "dashboard resources already match the stack source"
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m "Sync polylens2otel dashboard from ${GITHUB_REPOSITORY}@${GITHUB_SHA}"
+          for attempt in 1 2 3; do
+            if git push; then exit 0; fi
+            echo "push rejected (attempt ${attempt}) — rebasing onto origin/main"
+            git pull --rebase origin main
+          done
+          echo "::error::could not push the dashboard to gc-gitsync-m7kni after 3 attempts"
+          exit 1

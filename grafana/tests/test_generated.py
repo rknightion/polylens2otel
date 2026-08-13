@@ -6,12 +6,75 @@ import build_rules
 
 
 class GeneratedArtefactTests(unittest.TestCase):
+    def test_dashboard_is_v2_with_the_complete_top_level_tab_set(self):
+        dashboard = build_dashboard.render()
+        self.assertEqual(dashboard["apiVersion"], "dashboard.grafana.app/v2")
+        self.assertEqual(dashboard["kind"], "Dashboard")
+        self.assertEqual(dashboard["metadata"]["name"], "polylens2otel")
+        self.assertEqual(dashboard["spec"]["layout"]["kind"], "TabsLayout")
+        self.assertEqual(
+            [tab["spec"]["title"] for tab in dashboard["spec"]["layout"]["spec"]["tabs"]],
+            ["Overview", "Lens fleet", "Phone REST", "Calls & logs", "Self-o11y", "Traces", "Profiles"],
+        )
+
+    def test_dashboard_targets_the_generated_project_folder(self):
+        folder = build_dashboard.render_folder()
+        dashboard = build_dashboard.render()
+        self.assertEqual(folder["apiVersion"], "folder.grafana.app/v1")
+        self.assertEqual(folder["metadata"]["name"], "polylens2otel-dashboards")
+        self.assertEqual(folder["spec"]["title"], "polylens2otel Dashboards")
+        self.assertEqual(
+            dashboard["metadata"]["annotations"]["grafana.app/folder"],
+            folder["metadata"]["name"],
+        )
+
     def test_every_catalog_metric_is_queried_or_waived(self):
         cat = build_dashboard.catalog()
         rendered = json.dumps(build_dashboard.render())
         waivers = json.loads(build_dashboard.WAIVERS.read_text())["metrics"]
         for metric in cat["metrics"]:
             self.assertTrue(metric["prometheus"] in rendered or metric["name"] in waivers, metric["name"])
+
+    def test_catalog_prometheus_names_follow_the_exported_normalization_contract(self):
+        for metric in build_dashboard.catalog()["metrics"]:
+            expected = metric["name"].replace(".", "_")
+            if metric["kind"] == "counter":
+                expected += "_total"
+            self.assertEqual(metric["prometheus"], expected, metric["name"])
+
+    def test_every_non_metric_signal_is_visualized(self):
+        cat = build_dashboard.catalog()
+        rendered = build_dashboard.render()
+        strings = []
+
+        def collect(value):
+            if isinstance(value, str):
+                strings.append(value)
+            elif isinstance(value, dict):
+                for child in value.values():
+                    collect(child)
+            elif isinstance(value, list):
+                for child in value:
+                    collect(child)
+
+        collect(rendered)
+        query_text = "\n".join(strings)
+        for log in cat["logs"]:
+            self.assertIn(log["event_name"], query_text)
+        for trace in cat["traces"]:
+            self.assertIn(trace["span_name"], query_text)
+        for profile in cat["profiles"]:
+            self.assertIn(profile["profile_type"], query_text)
+
+    def test_every_built_panel_is_placed_once(self):
+        dashboard = build_dashboard.render()
+        placed = []
+        for tab in dashboard["spec"]["layout"]["spec"]["tabs"]:
+            for row in tab["spec"]["layout"]["spec"]["rows"]:
+                for item in row["spec"]["layout"]["spec"]["items"]:
+                    placed.append(item["spec"]["element"]["name"])
+        self.assertEqual(set(placed), set(dashboard["spec"]["elements"]))
+        self.assertEqual(len(placed), len(set(placed)))
 
     def test_rules_use_only_catalog_metric_names(self):
         rendered = build_rules.render()

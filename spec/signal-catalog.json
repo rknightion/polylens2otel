@@ -17,13 +17,13 @@
     {"name":"polyphone.network.info","prometheus":"polyphone_network_info","kind":"gauge","owner":"L10"},
     {"name":"polyphone.calls","prometheus":"polyphone_calls_total","kind":"counter","owner":"L10"},
     {"name":"polylens2otel.build_info","prometheus":"polylens2otel_build_info","kind":"gauge","owner":"L11"},
-    {"name":"polylens2otel.collector.duration","prometheus":"polylens2otel_collector_duration_seconds","kind":"gauge","owner":"L11"},
-    {"name":"polylens2otel.collector.availability","prometheus":"polylens2otel_collector_availability_ratio","kind":"gauge","owner":"L11"},
-    {"name":"polylens2otel.collector.expected_interval","prometheus":"polylens2otel_collector_expected_interval_seconds","kind":"gauge","owner":"L11"},
-    {"name":"polylens2otel.http.client.request.duration","prometheus":"polylens2otel_http_client_request_duration_seconds","kind":"gauge","owner":"L11"},
+    {"name":"polylens2otel.collector.duration","prometheus":"polylens2otel_collector_duration","kind":"gauge","owner":"L11"},
+    {"name":"polylens2otel.collector.availability","prometheus":"polylens2otel_collector_availability","kind":"gauge","owner":"L11"},
+    {"name":"polylens2otel.collector.expected_interval","prometheus":"polylens2otel_collector_expected_interval","kind":"gauge","owner":"L11"},
+    {"name":"polylens2otel.http.client.request.duration","prometheus":"polylens2otel_http_client_request_duration","kind":"gauge","owner":"L11"},
     {"name":"polylens2otel.http_4xx","prometheus":"polylens2otel_http_4xx_total","kind":"counter","owner":"L11"},
     {"name":"polylens2otel.http_5xx","prometheus":"polylens2otel_http_5xx_total","kind":"counter","owner":"L11"},
-    {"name":"polylens2otel.api.unexpected","prometheus":"polylens2otel_api_unexpected_ratio","kind":"gauge","owner":"L11"},
+    {"name":"polylens2otel.api.unexpected","prometheus":"polylens2otel_api_unexpected","kind":"gauge","owner":"L11"},
     {"name":"polylens2otel.auth.token.refresh","prometheus":"polylens2otel_auth_token_refresh_total","kind":"counter","owner":"L11"},
     {"name":"polylens2otel.auth.token.expires_seconds","prometheus":"polylens2otel_auth_token_expires_seconds","kind":"gauge","owner":"L11"},
     {"name":"polylens2otel.stream.reconnects","prometheus":"polylens2otel_stream_reconnects_total","kind":"counter","owner":"L7"},
@@ -36,5 +36,17 @@
   "logs": [
     {"event_name":"polylens.cdr","stream_label":"service_name=polylens2otel","owner":"L8"},
     {"event_name":"polyphone.call_record","stream_label":"service_name=polylens2otel","owner":"L10"}
+  ],
+  "traces": [
+    {"span_name":"collector\\..+","source":"collector scheduler TraceQL span-name pattern","owner":"L11"},
+    {"span_name":"http.client.request","source":"instrumented Lens and phone HTTP clients","owner":"L11"}
+  ],
+  "profiles": [
+    {"profile_type":"process_cpu:cpu:nanoseconds:cpu:nanoseconds","source":"Pyroscope Go CPU","owner":"L11"},
+    {"profile_type":"process_cpu:samples:count:cpu:nanoseconds","source":"Pyroscope Go CPU samples","owner":"L11"},
+    {"profile_type":"memory:alloc_objects:count:space:bytes","source":"Pyroscope Go allocated objects","owner":"L11"},
+    {"profile_type":"memory:alloc_space:bytes:space:bytes","source":"Pyroscope Go allocated bytes","owner":"L11"},
+    {"profile_type":"memory:inuse_objects:count:space:bytes","source":"Pyroscope Go in-use objects","owner":"L11"},
+    {"profile_type":"memory:inuse_space:bytes:space:bytes","source":"Pyroscope Go in-use bytes","owner":"L11"}
   ]
 }

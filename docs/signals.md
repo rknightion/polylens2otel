@@ -39,6 +39,26 @@ contract and must not group, alert, or join device metric series by IP address.
 
 Self-observability uses the `polylens2otel.*` namespace. The generated dashboard accounts for every metric in `spec/signal-catalog.json`.
 
+## Grafana dashboard
+
+`make dashboard` generates a Grafana dashboard API v2 resource at
+`dashboards/polylens2otel.json` and its dedicated folder at
+`dashboards/_folder.json`. The single dynamic dashboard uses tabs for Overview,
+Lens fleet, Phone REST, Calls and logs, Self-o11y, Traces, and Profiles. Tenant,
+site, device, and collector variables scope the fleet; the Overview also repeats
+a compact health row for each selected device.
+
+Every catalog metric, log event, trace family, and configured Pyroscope profile
+type must appear in at least one panel. `make grafana-check` enforces that
+coverage and validates backend-normalized Prometheus names so a plausible but
+nonexistent `_seconds` or `_ratio` suffix cannot silently pass the dashboard
+gate.
+
+On `main`, `.github/workflows/grafana-sync.yml` publishes both resources to the
+`polylens2otel/` directory of `rknightion/gc-gitsync-m7kni`. That repository is
+the Grafana GitSync source of truth; do not push this dashboard directly through
+the Grafana API because an out-of-band save would diverge from GitSync.
+
 At process start the exporter emits the `polylens2otel.startup` event with the
 `version`, `commit`, and `build.date` attributes. `polylens2otel.build_info` is
 a metric with the same build metadata.

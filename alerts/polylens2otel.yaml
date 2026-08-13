@@ -68,6 +68,6 @@ groups:
             model:
               datasource: {type: prometheus, uid: grafanacloud-prom}
               editorMode: code
-              expr: 'polylens2otel_collector_availability_ratio == 0'
+              expr: 'polylens2otel_collector_availability == 0'
               instant: true
               refId: A
