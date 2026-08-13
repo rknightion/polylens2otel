@@ -192,7 +192,7 @@ def _calls(builder: v2.Builder) -> dict:
     return v2.tab("Calls & logs", [
         v2.row("Call activity", [
             _ts(builder, "Phone call-log records", [v2.prometheus(_counter_rate(f"polyphone_calls_total{{{FLEET}}}"), "{{device_name}} {{direction}}")], unit="ops"),
-            _ts(builder, "Lens CDR records", [v2.loki('sum(rate({service_name="polylens2otel"} | event_name="polylens.cdr" | tenant_id=~"$tenant" [$__rate_interval]))')], unit="ops",
+            _ts(builder, "Lens CDR records", [v2.loki('sum(rate({service_name="polylens2otel"} | event_name="polylens.cdr" | tenant_id=~"$tenant" [5m]))')], unit="ops",
                 description="Rate of Lens CDR rows. Empty means no calls in the selected range."),
         ]),
         v2.row("Sanitized call records", [
@@ -240,15 +240,15 @@ def _traces(builder: v2.Builder) -> dict:
     collector_trace = f'{tenant_trace} && span.collector.id =~ "$collector"'
     return v2.tab("Traces", [
         v2.row("Trace search", [
-            _table(builder, "Collector-run traces", [v2.tempo(f'{{ resource.service.name = "polylens2otel" && name =~ "collector\\..+" && {collector_trace} }}')],
+            _table(builder, "Collector-run traces", [v2.tempo(f'{{ resource.service.name = "polylens2otel" && name =~ "collector[.].+" && {collector_trace} }}')],
                    width=24, height=10, description="One trace per scheduled collector run, with child HTTP calls."),
             _table(builder, "Outbound HTTP spans", [v2.tempo(f'{{ resource.service.name = "polylens2otel" && name = "http.client.request" && {tenant_trace} }}')],
                    width=24, height=10, description="Instrumented Lens and phone HTTP calls."),
         ]),
         v2.row("Trace-derived health", [
-            _ts(builder, "Collector p95 duration", [v2.tempo(f'{{ resource.service.name = "polylens2otel" && name =~ "collector\\..+" && {collector_trace} }} | quantile_over_time(duration, 0.95) by (span.collector.id)')], unit="s"),
+            _ts(builder, "Collector p95 duration", [v2.tempo(f'{{ resource.service.name = "polylens2otel" && name =~ "collector[.].+" && {collector_trace} }} | quantile_over_time(duration, 0.95) by (span.collector.id)')], unit="s"),
             _ts(builder, "HTTP p95 by source", [v2.tempo(f'{{ resource.service.name = "polylens2otel" && name = "http.client.request" && {tenant_trace} }} | quantile_over_time(duration, 0.95) by (span.source)')], unit="s"),
-            _ts(builder, "Collector run rate", [v2.tempo(f'{{ resource.service.name = "polylens2otel" && name =~ "collector\\..+" && {collector_trace} }} | rate() by (span.collector.id)')], unit="ops"),
+            _ts(builder, "Collector run rate", [v2.tempo(f'{{ resource.service.name = "polylens2otel" && name =~ "collector[.].+" && {collector_trace} }} | rate() by (span.collector.id)')], unit="ops"),
             _ts(builder, "HTTP request rate", [v2.tempo(f'{{ resource.service.name = "polylens2otel" && name = "http.client.request" && {tenant_trace} }} | rate() by (span.source)')], unit="ops"),
         ]),
     ])

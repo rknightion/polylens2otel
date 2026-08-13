@@ -38,7 +38,7 @@
     {"event_name":"polyphone.call_record","stream_label":"service_name=polylens2otel","owner":"L10"}
   ],
   "traces": [
-    {"span_name":"collector\\..+","source":"collector scheduler TraceQL span-name pattern","owner":"L11"},
+    {"span_name":"collector[.].+","source":"collector scheduler TraceQL span-name pattern","owner":"L11"},
     {"span_name":"http.client.request","source":"instrumented Lens and phone HTTP clients","owner":"L11"}
   ],
   "profiles": [

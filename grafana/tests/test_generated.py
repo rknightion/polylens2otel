@@ -114,6 +114,8 @@ class GeneratedArtefactTests(unittest.TestCase):
         query = self._queries(self._panel(dashboard, "Lens CDR records"))[0]["expr"]
         self.assertIn("rate(", query)
         self.assertIn("event_name=\"polylens.cdr\"", query)
+        self.assertIn("[5m]", query)
+        self.assertNotIn("$__rate_interval", query)
         self.assertNotIn("unwrap", query)
 
     def test_trace_search_uses_tables_and_collector_metrics_group_by_collector_id(self):
@@ -125,6 +127,13 @@ class GeneratedArtefactTests(unittest.TestCase):
             query = self._queries(self._panel(dashboard, title))[0]["query"]
             self.assertIn("span.collector.id", query)
             self.assertIn("$collector", query)
+
+    def test_collector_trace_queries_use_a_serialization_safe_dot_regex(self):
+        dashboard = build_dashboard.render()
+        for title in ["Collector-run traces", "Collector p95 duration", "Collector run rate"]:
+            query = self._queries(self._panel(dashboard, title))[0]["query"]
+            self.assertIn('name =~ "collector[.].+"', query)
+            self.assertNotIn(r"collector\..+", query)
 
     def test_headline_http_failure_stat_does_not_treat_digest_challenges_as_errors(self):
         dashboard = build_dashboard.render()

@@ -1560,7 +1560,7 @@
                       "group": "",
                       "kind": "DataQuery",
                       "spec": {
-                        "expr": "sum(rate({service_name=\"polylens2otel\"} | event_name=\"polylens.cdr\" | tenant_id=~\"$tenant\" [$__rate_interval]))",
+                        "expr": "sum(rate({service_name=\"polylens2otel\"} | event_name=\"polylens.cdr\" | tenant_id=~\"$tenant\" [5m]))",
                         "legendFormat": "",
                         "maxLines": 100,
                         "queryType": "range"
@@ -3010,7 +3010,7 @@
                       "spec": {
                         "limit": 20,
                         "metricsQueryType": "range",
-                        "query": "{ resource.service.name = \"polylens2otel\" && name =~ \"collector\\..+\" && span.tenant.id =~ \"$tenant\" && span.collector.id =~ \"$collector\" }",
+                        "query": "{ resource.service.name = \"polylens2otel\" && name =~ \"collector[.].+\" && span.tenant.id =~ \"$tenant\" && span.collector.id =~ \"$collector\" }",
                         "queryType": "traceql",
                         "serviceMapUseNativeHistograms": false,
                         "tableType": "traces"
@@ -3126,7 +3126,7 @@
                       "spec": {
                         "limit": 20,
                         "metricsQueryType": "range",
-                        "query": "{ resource.service.name = \"polylens2otel\" && name =~ \"collector\\..+\" && span.tenant.id =~ \"$tenant\" && span.collector.id =~ \"$collector\" } | quantile_over_time(duration, 0.95) by (span.collector.id)",
+                        "query": "{ resource.service.name = \"polylens2otel\" && name =~ \"collector[.].+\" && span.tenant.id =~ \"$tenant\" && span.collector.id =~ \"$collector\" } | quantile_over_time(duration, 0.95) by (span.collector.id)",
                         "queryType": "traceql",
                         "serviceMapUseNativeHistograms": false,
                         "tableType": "traces"
@@ -3351,7 +3351,7 @@
                       "spec": {
                         "limit": 20,
                         "metricsQueryType": "range",
-                        "query": "{ resource.service.name = \"polylens2otel\" && name =~ \"collector\\..+\" && span.tenant.id =~ \"$tenant\" && span.collector.id =~ \"$collector\" } | rate() by (span.collector.id)",
+                        "query": "{ resource.service.name = \"polylens2otel\" && name =~ \"collector[.].+\" && span.tenant.id =~ \"$tenant\" && span.collector.id =~ \"$collector\" } | rate() by (span.collector.id)",
                         "queryType": "traceql",
                         "serviceMapUseNativeHistograms": false,
                         "tableType": "traces"
