@@ -1,5 +1,30 @@
 # Changelog
 
+## [0.3.0](https://github.com/rknightion/polylens2otel/compare/v0.2.0...v0.3.0) (2026-08-13)
+
+
+### Features
+
+* **config:** support phone-only startup without Lens ([ad36b32](https://github.com/rknightion/polylens2otel/commit/ad36b320f56167c88c11a8f0826e3c303b33f3da)), closes [#51](https://github.com/rknightion/polylens2otel/issues/51)
+* **grafana:** add comprehensive v2 dashboard ([666a77a](https://github.com/rknightion/polylens2otel/commit/666a77a5687488bfbccd903f8d5a60be3cf9fd4e))
+* **phone:** default to Lens policy authentication ([33c448b](https://github.com/rknightion/polylens2otel/commit/33c448b3afba5f4ba0a83167b7d474452ae89218)), closes [#51](https://github.com/rknightion/polylens2otel/issues/51) [#55](https://github.com/rknightion/polylens2otel/issues/55)
+* **phone:** emit call and network telemetry ([bfc090f](https://github.com/rknightion/polylens2otel/commit/bfc090febd7a6ca4c41d6bd445636bd531ac95ac)), closes [#57](https://github.com/rknightion/polylens2otel/issues/57) [#58](https://github.com/rknightion/polylens2otel/issues/58)
+
+
+### Bug Fixes
+
+* **ci:** call GHCR pagination correctly ([7642e48](https://github.com/rknightion/polylens2otel/commit/7642e483e5ab7f5cb6aef3572da53e6a90fbdae7)), closes [#49](https://github.com/rknightion/polylens2otel/issues/49)
+* **ci:** consume verified actionlint installer ([9c3bce4](https://github.com/rknightion/polylens2otel/commit/9c3bce4c305b9326c112fcd01e3157c46b67e7c5)), closes [#53](https://github.com/rknightion/polylens2otel/issues/53)
+* **ci:** pin release installer versions ([b5e4225](https://github.com/rknightion/polylens2otel/commit/b5e42254a4583807ee45154b7b3c7d08966d14ba)), closes [#48](https://github.com/rknightion/polylens2otel/issues/48)
+* **config:** document collector intervals ([af6fd5d](https://github.com/rknightion/polylens2otel/commit/af6fd5d3afc376a30fdbcf8a0333ab2fb0baa313)), closes [#61](https://github.com/rknightion/polylens2otel/issues/61)
+* **grafana:** correct live dashboard queries ([d7f7208](https://github.com/rknightion/polylens2otel/commit/d7f7208914762f5ff822b7ed85e920df84f627f5)), closes [#67](https://github.com/rknightion/polylens2otel/issues/67)
+* **grafana:** keep healthy uptime green ([ca10d89](https://github.com/rknightion/polylens2otel/commit/ca10d893678b1e581ad8a67cdc72426bf38c52c2)), closes [#67](https://github.com/rknightion/polylens2otel/issues/67)
+* **grafana:** render collector traces and CDR rates ([823443c](https://github.com/rknightion/polylens2otel/commit/823443cc0466bb58e5bc9e2a095413ccd13e6786)), closes [#67](https://github.com/rknightion/polylens2otel/issues/67)
+* **phone:** apply phone timezone to call logs ([8dd886d](https://github.com/rknightion/polylens2otel/commit/8dd886d24dc4ab5b07b8c3191a52af0fa002f056)), closes [#65](https://github.com/rknightion/polylens2otel/issues/65)
+* **phone:** migrate call-log watermarks ([6539c7b](https://github.com/rknightion/polylens2otel/commit/6539c7bb0e76c46c6b3109bf6befb6203e55b183)), closes [#65](https://github.com/rknightion/polylens2otel/issues/65)
+* **release:** verify Syft downloads ([902bf45](https://github.com/rknightion/polylens2otel/commit/902bf450a8f33b6dcd2b373d61567faf0a85c70d)), closes [#48](https://github.com/rknightion/polylens2otel/issues/48)
+* **stream:** treat cancellation as clean shutdown ([f2f6882](https://github.com/rknightion/polylens2otel/commit/f2f6882cb9e5014d6c380f5d6bc4ecee3cd26faf)), closes [#56](https://github.com/rknightion/polylens2otel/issues/56)
+
 ## [0.2.0](https://github.com/rknightion/polylens2otel/compare/v0.1.0...v0.2.0) (2026-08-12)
 
 
