@@ -1,0 +1,21 @@
+project_name: "polylens2otel"
+default_status: "To Do"
+statuses: ["To Do", "In Progress", "Parked", "Done"]
+definition_of_done:
+  - "make check (vet, race tests, lint, govulncheck, tidy-check, grafana-check, build)"
+  - "make regen (only if the koanf config surface changed; the generated-doc CI job fails on drift)"
+  - "python3 scripts/check_doc_commands.py (only if docs/ or README.md changed)"
+  - "./scripts/check-secret-hygiene.sh"
+labels: []
+date_format: yyyy-mm-dd
+max_column_width: 20
+auto_open_browser: true
+default_port: 6420
+remote_operations: false
+auto_commit: false
+filesystem_only: false
+zero_padded_ids: 4
+bypass_git_hooks: false
+check_active_branches: false
+active_branch_days: 30
+task_prefix: "plo"

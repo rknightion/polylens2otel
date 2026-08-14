@@ -40,6 +40,15 @@ codex/
 # superpowers plans and specs are local scratch, never committed.
 docs/superpowers/
 
+# Claude Code repo-local config. `settings.json` and `hooks/` ARE tracked — they
+# enforce the Backlog.md rules (bare --notes/--plan replaces a section silently;
+# hand-edited task markdown loses one at exit 0) for anyone working in this repo.
+# Everything else under .claude/ is per-machine state: worktrees, scheduler locks,
+# and settings.local.json.
+.claude/*
+!.claude/settings.json
+!.claude/hooks/
+
 # Local config and credentials — never commit either.
 config.local.yaml
 .env
