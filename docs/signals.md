@@ -55,7 +55,7 @@ nonexistent `_seconds` or `_ratio` suffix cannot silently pass the dashboard
 gate.
 
 On `main`, `.github/workflows/grafana-sync.yml` publishes both resources to the
-`polylens2otel/` directory of `rknightion/gc-gitsync-m7kni`. That repository is
+`polylens2otel/` directory of `m7kni/gc-gitsync-m7kni`. That repository is
 the Grafana GitSync source of truth; do not push this dashboard directly through
 the Grafana API because an out-of-band save would diverge from GitSync.
 
