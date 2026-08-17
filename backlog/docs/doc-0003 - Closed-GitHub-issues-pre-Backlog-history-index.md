@@ -1,9 +1,9 @@
 ---
 id: doc-0003
-title: Closed GitHub issues (pre-Backlog history record)
+title: Closed GitHub issues (pre-Backlog history index)
 type: other
 created_date: '2026-08-14 16:58'
-updated_date: '2026-08-14 17:03'
+updated_date: '2026-08-17 09:03'
 ---
 > **This is the record of the work tracked on GitHub Issues before polylens2otel moved to
 > Backlog.md on 2026-08-14. The issues were DELETED from GitHub on that date and there is no JSON
