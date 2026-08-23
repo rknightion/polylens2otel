@@ -21,3 +21,7 @@ Reference = [
   { Troubleshooting = "troubleshooting.md" },
   { Comparison = "comparison.md" },
 ]
+
+[assets]
+social_image = "assets/social-card.png"
+social_image_alt = "polylens2otel documentation social preview card"
