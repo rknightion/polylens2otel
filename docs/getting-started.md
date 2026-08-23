@@ -2,7 +2,7 @@
 
 ## Requirements
 
-- Go 1.26.5 or a container runtime
+- Go 1.27.0 or a container runtime
 - Poly Lens OAuth client credentials
 - A Poly Edge phone account with read access to the management API
 - An OTLP endpoint that accepts metrics, logs and traces
