@@ -8,7 +8,7 @@ COMMIT ?= $(shell git rev-parse HEAD 2>/dev/null || echo unknown)
 BUILD_DATE ?= $(shell date -u +%Y-%m-%dT%H:%M:%SZ)
 LDFLAGS := -s -w -X github.com/rknightion/polylens2otel/internal/version.Version=$(VERSION) -X github.com/rknightion/polylens2otel/internal/version.Commit=$(COMMIT) -X github.com/rknightion/polylens2otel/internal/version.BuildDate=$(BUILD_DATE)
 TOOLS_DIR := $(CURDIR)/.tools
-GOLANGCI_LINT_VERSION ?= v2.12.2
+GOLANGCI_LINT_VERSION ?= v2.13.1
 GOVULNCHECK_VERSION ?= v1.3.0
 HELM_DOCS_VERSION ?= v1.14.2
 export PATH := $(TOOLS_DIR):$(PATH)
