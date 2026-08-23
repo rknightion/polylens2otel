@@ -4,7 +4,7 @@ title: Upgrade Go toolchain to 1.27
 status: In Progress
 assignee: []
 created_date: '2026-08-23 19:06'
-updated_date: '2026-08-23 19:49'
+updated_date: '2026-08-23 19:54'
 labels: []
 dependencies: []
 ordinal: 3000
@@ -41,4 +41,6 @@ Adopt Go 1.27 consistently across the application, nested modules, build images,
 
 <!-- SECTION:NOTES:BEGIN -->
 Local Go 1.27.0 make check passed: vet, race tests, lint, govulncheck, tidy, Grafana checks, and build. Documentation command validation checked 19 commands across 10 files, and secret hygiene passed. No koanf config surface changed, so regeneration was not required. CodeRabbit was skipped because only declarative module, container, and current documentation pins changed.
+
+Exact-head CI run 32662554010 exposed two stale tool-distribution pins under Go 1.27: the v2.12.2 release binary was built with Go 1.26, and govulncheck v1.1.4 panicked in its older SSA builder. CI now compiles golangci-lint v2.12.2 with install-mode goinstall under the job's Go 1.27 toolchain and pins govulncheck v1.3.0. A fresh v1.3.0 install reported no vulnerabilities and actionlint accepted the workflow. The failed run is retained as before-fix evidence.
 <!-- SECTION:NOTES:END -->
