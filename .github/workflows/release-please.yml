@@ -25,7 +25,7 @@ jobs:
     steps:
       - name: Mint a scoped release token
         id: bao
-        uses: rknightion/.github/.github/actions/broker-token@b9ab5f80961f2c29c47a8d7d5dff112b6551169c # untagged resolver fix; zizmor: ignore[ref-version-mismatch]
+        uses: rknightion/.github/.github/actions/broker-token@bc58399e49a8d8131a379f530fffe8c9659667f9 # untagged resolver fix; zizmor: ignore[ref-version-mismatch]
         with:
           permission-set: release-please-polylens2otel
           role: release-please-polylens2otel
