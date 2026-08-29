@@ -6,7 +6,7 @@ export PATH := tools_dir + ":" + env_var("PATH")
 # renovate: datasource=github-tags depName=golangci/golangci-lint
 golangci_lint_version := "v2.13.2"
 # renovate: datasource=github-tags depName=golang/vuln
-govulncheck_version := "v1.3.0"
+govulncheck_version := "v1.7.0"
 # renovate: datasource=github-tags depName=norwoodj/helm-docs
 helm_docs_version := "v1.14.2"
 
