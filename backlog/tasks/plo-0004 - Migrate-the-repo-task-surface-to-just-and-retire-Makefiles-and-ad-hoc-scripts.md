@@ -1,10 +1,10 @@
 ---
 id: PLO-0004
 title: Migrate the repo task surface to just and retire Makefiles and ad-hoc scripts
-status: To Do
+status: Parked
 assignee: []
 created_date: '2026-08-28 19:27'
-updated_date: '2026-08-29 11:20'
+updated_date: '2026-08-29 14:29'
 labels:
   - 'wave:2-fleet'
 dependencies: []
@@ -577,6 +577,25 @@ something (a doc, a workflow, `check_doc_commands.py`) still references.
 - [ ] #3 python3 scripts/check_doc_commands.py (only if docs/ or README.md changed)
 - [ ] #4 ./scripts/check-secret-hygiene.sh
 <!-- DOD:END -->
+
+## Implementation Plan
+
+<!-- SECTION:PLAN:BEGIN -->
+1. Inspect the current task surface, hooks, workflow callers, and generated-doc command validator against the binding migration contract.
+2. Add and validate the justfile; update the validator and generated-doc source before migrating references.
+3. Replace Makefile/script/CI/doc task paths, preserving reusable calls and repointing the tracked pre-commit hook without changing local Git config.
+4. Run formatting, task-surface, targeted workflow/config checks, just check, hook verification, review, push main, and confirm the final-SHA CI run before finalizing the task.
+<!-- SECTION:PLAN:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Parked before commit by the mandatory CodeRabbit gate. The staged migration has objective local evidence: isolated `just check` passed (format, vet, golangci-lint v2.13.2, govulncheck, tidy drift, generated docs/dashboard/rules, Go race tests, two task-surface tests, secret hygiene, documentation commands, and build); `just --dump --dump-format json`, `just --fmt --check`, `just docs` plus chart README diff, manual pre-commit hook execution, and `actionlint` on ci.yml/helm.yml passed.
+
+Review blocker: `coderabbit review --agent` emitted only startup/status records through `{"type":"status","phase":"analyzing","status":"summarizing"}` and never a `complete` line. A bounded wait observed multiple lingering `coderabbit review --agent` processes and produced no findings or terminal review output. Per the mandatory review gate, the named-path staged WIP remains intentionally uncommitted.
+
+Resume boundary: after the CodeRabbit service/process contention clears and no inherited review process remains, rerun `coderabbit review --agent`, require and read its `complete` result, address applicable findings, rerun the isolated just gate, then commit/push and verify CI at the final SHA. The remaining Makefile and three absorbable scripts must stay until that CI proof is available.
+<!-- SECTION:NOTES:END -->
 
 ## Comments
 
