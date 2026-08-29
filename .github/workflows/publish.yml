@@ -1,8 +1,9 @@
 name: publish
 
-# Called by release-please.yml. Empty release_tag publishes the edge :main image;
-# a release tag publishes the immutable release image and Helm chart. There is no
-# push trigger: release-please gates exactly one of the release and edge callers.
+# Called by release-please.yml and by auto-rc.yml. Empty release_tag publishes the
+# edge :main image; a release tag publishes the immutable release image and Helm
+# chart. There is no push trigger: release-please gates exactly one of the release
+# and edge callers, and auto-rc calls in separately with an -rc.N tag.
 on:
   workflow_call:
     inputs:
