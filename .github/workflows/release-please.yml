@@ -75,7 +75,7 @@ jobs:
       id-token: write
       packages: write
       attestations: write
-    uses: rknightion/.github/.github/workflows/binaries.yml@ff89dc29cee6fbe49128a19715ee3f60390be0dc # v1.9.7
+    uses: rknightion/.github/.github/workflows/binaries.yml@0e56520d848f5fda8cbfa0bda17797ef41f2a5a7 # v1.9.8
     with:
       release-tag: ${{ needs.release-please.outputs.tag_name }}
       install-cosign: true
