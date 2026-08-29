@@ -58,6 +58,11 @@ jobs:
     needs: rc
     if: needs.rc.outputs.tag != ''
     permissions:
+      # Must match what release-please.yml grants publish.yml, because a called
+      # workflow's job permissions are validated at STARTUP and capped by the
+      # calling job's. actions: read is what this repo's private-publish job
+      # needs; omitting it is a startup_failure with zero jobs and no log.
+      actions: read
       contents: write        # attach SBOMs + notices to the RC release
       packages: write        # push the image and chart to GHCR
       id-token: write        # cosign keyless signing
