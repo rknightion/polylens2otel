@@ -10,7 +10,7 @@
 ## Build from source
 
 ```sh
-make build
+just build
 cp config.example.yaml config.yaml
 ```
 

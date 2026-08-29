@@ -14,12 +14,15 @@ concurrency:
 
 jobs:
   build-test:
-    name: build / vet / test
+    name: build / check
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+      - uses: extractions/setup-just@53165ef7e734c5c07cb06b3c8e7b647c5aa16db3 # v4
+        with:
+          just-version: '1.58.0'
       - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
           go-version-file: go.mod
@@ -27,16 +30,12 @@ jobs:
       - name: go.mod tidy check
         run: |
           if [[ -f internal/lensstream/stream.go ]] && rg -q 'pyroscope-go' cmd internal; then
-            make tidy-check
+            just tidy-check
           else
             echo "::notice::Pinned WebSocket/Pyroscope dependencies are owned by pending L7/L14; the final exact-SHA gate must execute tidy-check."
           fi
-      - name: go vet
-        run: go vet ./...
-      - name: go build
-        run: go build ./...
-      - name: go test -race
-        run: go test -race ./...
+      - name: build / check
+        run: just check
 
   lint:
     name: golangci-lint
@@ -63,14 +62,15 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+      - uses: extractions/setup-just@53165ef7e734c5c07cb06b3c8e7b647c5aa16db3 # v4
+        with:
+          just-version: '1.58.0'
       - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
           go-version-file: go.mod
           cache: true
-      - name: install govulncheck (pinned)
-        run: go install golang.org/x/vuln/cmd/govulncheck@v1.3.0
       - name: govulncheck
-        run: govulncheck ./...
+        run: just audit
 
   goreleaser-snapshot:
     name: goreleaser build (snapshot)
@@ -120,8 +120,11 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+      - uses: extractions/setup-just@53165ef7e734c5c07cb06b3c8e7b647c5aa16db3 # v4
+        with:
+          just-version: '1.58.0'
       - name: check committed files for secrets
-        run: ./scripts/check-secret-hygiene.sh
+        run: just secret-hygiene
 
   grafana:
     name: Grafana assets + generated docs
@@ -130,12 +133,16 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+      - uses: extractions/setup-just@53165ef7e734c5c07cb06b3c8e7b647c5aa16db3 # v4
+        with:
+          just-version: '1.58.0'
       - name: Verify generated configuration documentation
-        run: go run ./internal/configdoc --check
+        run: just _configdoc-check
       - name: Verify dashboards and alert rules
         run: |
           if [[ -d grafana ]]; then
-            make grafana-check
+            just gen-check
+            just _grafana-test
           else
             echo "::notice::Grafana artifacts are owned by pending lane L12; the final exact-SHA gate must execute this check."
           fi

@@ -16,12 +16,12 @@ Call-quality data is not available from the supported APIs. There are no MOS, ji
 ## Build and check
 
 ```sh
-make build
-make check
+just build
+just check
 ```
 
-`make build` embeds the resolved version, source commit, and UTC build date in
-the binary. `make docker` passes the same three values into the image build;
+`just build` embeds the resolved version, source commit, and UTC build date in
+the binary. `just image` passes the same three values into the image build;
 without explicit overrides they are derived from the local Git checkout and the
 current UTC time. Published release images carry the release version, the
 release commit, and their UTC build date. The mutable `:main` image is an edge
@@ -41,7 +41,7 @@ See [Getting started](docs/getting-started.md) for installation and [Environment
 The repository includes a production container, Helm chart and Compose reference. All three run as UID/GID 65532 and persist CDR checkpoints under `/var/lib/polylens2otel`.
 
 ```sh
-make docker
+just image
 helm lint charts/polylens2otel
 docker compose -f deploy/docker-compose.yaml config
 ```

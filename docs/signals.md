@@ -41,7 +41,7 @@ Self-observability uses the `polylens2otel.*` namespace. The generated dashboard
 
 ## Grafana dashboard
 
-`make dashboard` generates a Grafana dashboard API v2 resource at
+`just gen` generates a Grafana dashboard API v2 resource at
 `dashboards/polylens2otel.json` and its dedicated folder at
 `dashboards/_folder.json`. The single dynamic dashboard uses tabs for Overview,
 Lens fleet, Phone REST, Calls and logs, Self-o11y, Traces, and Profiles. Tenant,
@@ -49,7 +49,7 @@ site, device, and collector variables scope the fleet; the Overview also repeats
 a compact health row for each selected device.
 
 Every catalog metric, log event, trace family, and configured Pyroscope profile
-type must appear in at least one panel. `make grafana-check` enforces that
+type must appear in at least one panel. `just gen-check` enforces that
 coverage and validates backend-normalized Prometheus names so a plausible but
 nonexistent `_seconds` or `_ratio` suffix cannot silently pass the dashboard
 gate.

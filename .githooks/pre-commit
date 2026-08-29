@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
 set -euo pipefail
-go test ./...
-go vet ./...
-./scripts/check-secret-hygiene.sh
+just test
+just lint
+just secret-hygiene

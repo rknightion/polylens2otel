@@ -2,10 +2,10 @@ project_name: "polylens2otel"
 default_status: "To Do"
 statuses: ["To Do", "In Progress", "Parked", "Done"]
 definition_of_done:
-  - "make check (vet, race tests, lint, govulncheck, tidy-check, grafana-check, build)"
-  - "make regen (only if the koanf config surface changed; the generated-doc CI job fails on drift)"
-  - "python3 scripts/check_doc_commands.py (only if docs/ or README.md changed)"
-  - "./scripts/check-secret-hygiene.sh"
+  - "just check (fmt-check, lint, audit, tidy-check, gen-check, test, secret-hygiene, doc-commands, build)"
+  - "just gen (only if the koanf config surface changed; the generated-doc CI job fails on drift)"
+  - "just doc-commands (only if docs/ or README.md changed — also covered by just check)"
+  - "just secret-hygiene (also covered by just check)"
 labels: []
 date_format: yyyy-mm-dd
 max_column_width: 20

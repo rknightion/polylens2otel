@@ -13,15 +13,22 @@ Open work is a query, not a file: `backlog task list --plain`. Durable reference
 - **Finalize in one call** — `backlog task edit <id> --check-ac 1 --check-ac 2 -s Done` — so an interrupted run cannot leave finished work looking unfinished.
 - `backlog/` is committed, so no credential, token, tenant/collection/policy ID, MAC address, private or external IP, or internal hostname goes in a task or doc. Device names are the deliberate exception: they already appear in tracked fixtures.
 
-## Commands
+## Task interface
 
-- make build — compile the binary
-- make test — race-enabled tests
-- make check — repository green bar
-- make regen — regenerate configuration documentation
-- make dashboard / make rules — regenerate Grafana artifacts
-- make grafana-check — check generated dashboards and alerts
-- make docker — build the container
+This repo's task surface is a `justfile`. Discover it, don't guess it:
+
+    just --list                        # human-readable
+    just --dump --dump-format json     # machine-readable
+    just --show <recipe>               # what a recipe actually runs
+
+- `just check` is the full gate and is exactly what CI enforces. It must pass before you commit.
+- Prefer `just <recipe>` over the underlying tool. If you are typing `pytest` or `go test`, you want
+  `just test`.
+- Run `just` with stdin from /dev/null. No recipe in this repo is currently marked `[confirm]`, but
+  treat any future one that way: stop and ask before running it; never pass `--yes` or
+  `JUST_YES=1`.
+- If a task you need does not exist, add a recipe with a `#` doc comment and a `[group(...)]` rather
+  than running a bare command.
 
 ## Method
 
