@@ -1,0 +1,30 @@
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+# Product-specific additions to the central CodeRabbit defaults.
+# Keep inheritance enabled; shared review policy lives in the owner/coderabbit repository.
+inheritance: true
+reviews:
+  path_filters:
+  - '!docs/env-vars.md'
+  - '!config.example.yaml'
+  - '!dashboards/_folder.json'
+  - '!dashboards/polylens2otel.json'
+  - '!alerts/polylens2otel.yaml'
+  - '!charts/polylens2otel/README.md'
+  path_instructions:
+  - path: internal/**/*.go
+    instructions: >-
+      Keep configuration in internal/config, signal names in internal/semconv and OTLP in internal/telemetry.
+      Stamp tenant.id only at the emitter boundary. CDRs are structured logs and only service_name is
+      a Loki stream label. Parsing, retries, dedupe, checkpoints and scheduler state need concrete behavioural
+      tests.
+  - path: internal/lens*/**/*.go
+    instructions: >-
+      Lens token requests are JSON and bearer auth must work over HTTP/2. Preserve pageSize on follow-up
+      pagination and reject mutations before network I/O. deviceStream remains a named graphql-transport-ws
+      DevStream subscription that supplements polling at the edge rather than replacing its reconciliation
+      semantics.
+  - path: internal/phone*/**/*.go
+    instructions: >-
+      Phone authentication is Digest as Polycom; config/get is the sole read-only POST. Match the phone
+      certificate CN to the Lens MAC before sending credentials. Static targets override Lens internalIp,
+      discovery must not scan, and 404 before auth means api_disabled while 401 means auth_failed.
