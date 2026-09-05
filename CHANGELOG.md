@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.3.1](https://github.com/rknightion/polylens2otel/compare/v0.3.0...v0.3.1) (2026-09-05)
+
+
+### Bug Fixes
+
+* **auto-rc:** grant actions: read to the publish caller ([8e25dcb](https://github.com/rknightion/polylens2otel/commit/8e25dcb7df22c690161a8c20917c9e5d342b6dd4))
+* **ci:** repin rknightion/.github refs to v1.9.7 so Renovate can track them ([3d7591b](https://github.com/rknightion/polylens2otel/commit/3d7591b475eb46b78b8dda06a94c47f0d8c06c7a))
+* declare docs social card ([c65b757](https://github.com/rknightion/polylens2otel/commit/c65b757712c5d5010502575f1cd5817744ae07ac))
+* **grafana-sync:** repoint the git add pathspec at grafana/ too ([eea1f75](https://github.com/rknightion/polylens2otel/commit/eea1f755c135a7f575adfbc05abb4ca855b46ee1))
+* **grafana-sync:** write into the hub's grafana/ subtree ([e6f9b27](https://github.com/rknightion/polylens2otel/commit/e6f9b27478aebbb32ebfc095b81ec57236ccb6da))
+
 ## [0.3.0](https://github.com/rknightion/polylens2otel/compare/v0.2.0...v0.3.0) (2026-08-13)
 
 
