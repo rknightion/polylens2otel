@@ -1,66 +1,83 @@
-# polylens2otel development register
+# polylens2otel
 
-The durable tracker is **Backlog.md**, in `backlog/`. This file contains current engineering truth only.
-
-## Task tracking
-
-Open work is a query, not a file: `backlog task list --plain`. Durable reference is `backlog doc list --plain`.
-
-- Read the **Agent fan-out protocol (canonical)** doc before designing a wave, and the **Wave operating model** doc for this project's own rules, recurring defects and lane conventions. The protocol wins on any generic specific; the operating model wins on anything about this repo.
-- Work before 2026-08-14 was tracked on GitHub Issues. Those issues were **deleted** and there is no JSON archive, so the **Closed GitHub issues (pre-Backlog history record)** doc is the record, not an index into one. Cite closed work as `#NNN`, new work as `plo-NNNN`.
-- **Never use `--notes` or `--plan` bare** — they silently replace the whole section and destroy another session's writes at exit 0. Use `--append-notes` and `--append-plan`. A global `PreToolUse` hook in the agent config denies the bare forms.
-- **Never hand-edit task, draft, doc, decision or milestone markdown.** Section boundaries are HTML-comment markers; breaking one silently drops the section at exit 0 and there is no repair command. `backlog/config.yml` is the one exception and is edited by hand, because list-valued keys cannot be set through `backlog config set`.
-- **Finalize in one call** — `backlog task edit <id> --check-ac 1 --check-ac 2 -s Done` — so an interrupted run cannot leave finished work looking unfinished.
-- `backlog/` is committed, so no credential, token, tenant/collection/policy ID, MAC address, private or external IP, or internal hostname goes in a task or doc. Device names are the deliberate exception: they already appear in tracked fixtures.
+Collects Poly Lens cloud (GraphQL) and Poly desk-phone REST telemetry and exports it as OTLP metrics
+and logs.
 
 ## Task interface
 
-This repo's task surface is a `justfile`. Discover it, don't guess it:
+`just check` is the gate and must pass before you commit. CI runs it verbatim, then builds the
+container image and the release artifacts in separate jobs; there is no `ci` recipe here. No recipe
+is marked `[confirm]`. Run `just` with stdin from `/dev/null`.
 
-    just --list                        # human-readable
-    just --dump --dump-format json     # machine-readable
-    just --show <recipe>               # what a recipe actually runs
+`just install-hooks` points git at the tracked `.githooks/` pre-commit gate.
 
-- `just check` is the full gate and is exactly what CI enforces. It must pass before you commit.
-- Prefer `just <recipe>` over the underlying tool. If you are typing `pytest` or `go test`, you want
-  `just test`.
-- Run `just` with stdin from /dev/null. No recipe in this repo is currently marked `[confirm]`, but
-  treat any future one that way: stop and ask before running it; never pass `--yes` or
-  `JUST_YES=1`.
-- If a task you need does not exist, add a recipe with a `#` doc comment and a `[group(...)]` rather
-  than running a bare command.
+## Tracker
 
-## Method
+Tasks are `plo-NNNN` in `backlog/`. Read the **Agent fan-out protocol (canonical)** doc before
+designing a wave, and the **Wave operating model** doc for this repo's own rules, recurring defects
+and lane conventions. The operating model wins on anything about this repo.
 
-Write tests first for parsing, retry/backoff, state machines, dedupe, checkpointing and branching. Validate declarative files with their parsers and renderers. Never use a missing fixture as a test skip.
+`#NNN` refers to a pre-migration GitHub issue. Those issues were deleted and there is no JSON
+archive: the **Closed GitHub issues (pre-Backlog history record)** doc is the record itself, not an
+index into one.
 
-## Architecture seams
+Tracker traps:
 
-- internal/config owns the complete koanf configuration surface.
-- internal/semconv owns every signal and attribute name.
-- internal/telemetry is the only package that touches OTLP.
-- internal/collector owns registration and scheduling.
-- Each collector domain exposes Register(collector.Deps); adding a collector changes its file plus its domain register file.
-- cmd/polylens2otel/collectors_import.go is the frozen domain call list.
+- **Never `--notes` or `--plan` bare.** They *silently replace* the whole section and exit 0,
+  destroying another session's writes. Use `--append-notes` and `--append-plan`. A `PreToolUse` hook
+  denies the bare forms.
+- Break an HTML-comment section marker by hand-editing task markdown and the section is silently
+  dropped at exit 0. There is no repair command. `backlog/config.yml` is the one exception and is
+  edited by hand, because list-valued keys cannot be set through `backlog config set`.
+- **Finalize in one call** so an interrupted run cannot leave finished work looking unfinished:
+  `backlog task edit <id> --check-ac 1 --check-ac 2 -s Done`.
+- `backlog/` is committed and public: no credential, token, tenant/collection/policy ID, MAC address,
+  private or external IP, or internal hostname in a task or doc. Device names are the deliberate
+  exception - they already appear in tracked fixtures.
 
-## Configuration and secrets
+## Ownership seams
 
-Configuration precedence is defaults, YAML, then PL2O_ environment variables with double underscores for nesting. Secrets are environment-only. Never commit tokens, tenant IDs, internal hostnames or private addresses.
+Cross a seam and two packages start disagreeing about the same name.
 
-## Telemetry model
+- `internal/config` owns the complete koanf configuration surface.
+- `internal/semconv` owns every signal and attribute name. Nothing else declares one.
+- `internal/telemetry` is the only package that touches OTLP.
+- `internal/collector` owns registration and scheduling.
+- Each collector domain exposes `Register(collector.Deps)`. Adding a collector changes its own file
+  plus its domain register file, nothing else.
+- `cmd/polylens2otel/collectors_import.go` is the frozen domain call list.
 
-Lens signals use polylens.*, phone REST signals use polyphone.*, and self-observability uses polylens2otel.*. Every signal receives tenant.id at the Emitter boundary. CDRs are logs with structured metadata; only service_name is a Loki stream label.
+## Configuration and telemetry model
 
-## Non-negotiable traps
+- Precedence is defaults, then YAML, then `PL2O_` environment variables with **double underscores**
+  for nesting (`PL2O_OTLP__ENDPOINT`). Secrets are environment-only and never enter a YAML file.
+- Lens signals are `polylens.*`, phone REST signals are `polyphone.*`, self-observability is
+  `polylens2otel.*`.
+- `tenant.id` is stamped at the Emitter boundary and nowhere else.
+- CDRs are OTLP logs whose attributes arrive as Loki **structured metadata**, not stream labels. Only
+  `service_name` is a stream label, so `{event_name="polylens.cdr"}` matches zero rows silently -
+  always `{service_name="polylens2otel"} | event_name=...`.
 
-- Lens token requests are JSON, bearer headers must work with HTTP/2, 4xx bodies are evidence, and follow-up pageSize must not change.
-- Lens mutations are rejected before network I/O.
-- deviceStream is a named DevStream graphql-transport-ws subscription and remains an edge-triggered supplement to polling.
-- Phone auth is Digest as Polycom. config/get is the only POST and is a read.
-- A phone certificate CN must match the Lens MAC before credentials are sent.
-- Static per-device targets override Lens internalIp; discovery never scans.
-- 404 before auth means api_disabled; 401 means auth_failed.
-- No call-quality, utilization, room, webhook or syslog subsystem exists here.
+## Traps
+
+- The Lens **token** request body is JSON, and the bearer header is set lowercase (`authorization`);
+  HTTP/2 field names are lowercase and `TestGraphQLUsesLowercaseBearerAuthorization` pins it. Do not
+  switch to the canonical-cased form.
+- A Lens **mutation is rejected before any network I/O** - the client regex-matches the keyword. This
+  exporter is read-only against Lens by construction; do not add a bypass.
+- 4xx bodies from Lens are evidence, not noise: read them before retrying.
+- Paginate with `nextToken` and keep `pageSize` **identical** on every follow-up page.
+- `deviceStream` is a named `DevStream` `graphql-transport-ws` subscription and is an edge-triggered
+  *supplement* to polling, never a replacement. It is silent when nothing changes.
+- Phone auth is HTTP Digest, presenting as Polycom. `config/get` is the only POST and it is a read.
+- A phone's certificate CN must match the Lens MAC before credentials are sent
+  (`internal/phoneclient/client.go`).
+- A static per-device target overrides the Lens `internalIp`. Discovery never scans a network.
+- Phone probe states: 404 before auth means `api_disabled`, 401 means `auth_failed`. They are not
+  interchangeable.
+- **No call-quality, utilization, room, webhook or syslog subsystem exists here** - deliberate, not a
+  gap to fill. Handset SIP voice quality is a separate exporter.
+- Never use a missing fixture as a reason to skip a test.
 
 <!-- BACKLOG.MD GUIDELINES START -->
 <!-- backlog.md-instructions-version: 1.50.1 -->
