@@ -1,77 +1,39 @@
-name: Clean up GHCR images
+# Weekly GHCR retention. Keeps every stable release forever, the newest 10 RCs,
+# 7 days of main-<sha> edge images and 30 days of 0.0.0-main.* dev charts;
+# sweeps orphaned cosign signatures and stale buildcache layers.
+#
+# Replaces a bespoke github-script implementation that could never delete
+# anything: it read its kill switch from `inputs.delete`, and a scheduled run
+# has no inputs, so every weekly run fell back to a dry run. It also only
+# considered untagged manifests older than 30 days, so buildcache layers, edge
+# images, RCs and dev chart versions were all out of its reach.
+name: ghcr-cleanup
 
 on:
   schedule:
-    - cron: '17 3 * * 0'
+    - cron: "17 3 * * 1"
   workflow_dispatch:
     inputs:
-      delete:
-        description: Delete the listed candidates (disabled by default)
-        required: false
-        default: false
+      dry-run:
+        description: "Report what would be deleted without deleting it."
         type: boolean
+        default: true
 
 permissions:
   contents: read
-  packages: write
+
+concurrency:
+  # Never cancel a retention sweep halfway through; serialize overlapping runs.
+  group: ghcr-cleanup
+  cancel-in-progress: false
 
 jobs:
-  cleanup:
-    name: Delete old untagged image manifests
-    runs-on: ubuntu-latest
-    env:
-      # Scheduled runs have no inputs and must always remain dry runs.
-      DELETE_CANDIDATES: ${{ inputs.delete || 'false' }}
-    steps:
-      - name: List candidates and optionally delete them
-        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
-        with:
-          github-token: ${{ github.token }}
-          script: |
-            const owner = context.repo.owner;
-            const packageName = context.repo.repo;
-            const deleteCandidates = process.env.DELETE_CANDIDATES === 'true';
-            const cutoff = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-            const ownerInfo = await github.rest.users.getByUsername({ username: owner });
-            const route = ownerInfo.data.type === 'Organization'
-              ? 'orgs/{org}/packages/{package_type}/{package_name}/versions'
-              : 'users/{username}/packages/{package_type}/{package_name}/versions';
-            const routeParameters = ownerInfo.data.type === 'Organization'
-              ? { org: owner, package_type: 'container', package_name: packageName }
-              : { username: owner, package_type: 'container', package_name: packageName };
-            const versions = await github.paginate(`GET /${route}`, {
-              ...routeParameters,
-              per_page: 100,
-            });
-
-            const protectedTag = (tag) => /^buildcache(?:-|$)/.test(tag)
-              || tag === 'latest'
-              || tag === 'main'
-              || /^v/.test(tag)
-              || /^\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?$/.test(tag)
-              || /^main-[0-9a-f]{7,}$/i.test(tag);
-            const candidates = versions.filter((version) => {
-              const tags = version.metadata?.container?.tags ?? [];
-              const createdAt = new Date(version.created_at);
-              return tags.length === 0
-                && createdAt < cutoff
-                && !tags.some(protectedTag);
-            });
-
-            core.notice(`Dry run: ${candidates.length} untagged manifests older than 30 days would be deleted.`);
-            for (const version of candidates) {
-              core.notice(`Candidate: id=${version.id} digest=${version.name} created_at=${version.created_at}`);
-            }
-
-            if (!deleteCandidates) {
-              core.notice('Deletion is disabled. Re-run manually with delete=true to remove the listed candidates.');
-              return;
-            }
-
-            for (const version of candidates) {
-              await github.request(`DELETE /${route}/{package_version_id}`, {
-                ...routeParameters,
-                package_version_id: version.id,
-              });
-              core.info(`Deleted package version ${version.id} (${version.name}).`);
-            }
+  prune:
+    permissions:
+      contents: read
+      packages: write # delete package versions
+    uses: rknightion/.github/.github/workflows/ghcr-cleanup.yml@e6d074e42fed0c74b1e9936637b7e2fb21403779 # v1.22.0
+    with:
+      packages: "polylens2otel,charts/polylens2otel"
+      # Scheduled runs prune for real; a manual dispatch defaults to dry-run.
+      dry-run: ${{ github.event_name == 'workflow_dispatch' && inputs.dry-run || false }}
