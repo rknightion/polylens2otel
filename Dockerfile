@@ -20,7 +20,7 @@ RUN install -d -m 0750 -o 65532 -g 65532 /out/state
 # ---- runtime ----
 # static-debian includes the system CA bundle required for Lens, phone, and OTLP
 # HTTPS connections while retaining the distroless nonroot runtime identity.
-FROM gcr.io/distroless/static-debian12:nonroot@sha256:f5b485ea962d9bd1186b2f6b3a061191539b905b82ec395de78cbfae51f20e35
+FROM gcr.io/distroless/static-debian12:nonroot@sha256:afa5c872c891853ca7fcf1f12c3edb23f7eeef36189728842dd51042ff57f7ab
 COPY --from=build /out/polylens2otel /usr/local/bin/polylens2otel
 COPY --from=build --chown=65532:65532 /out/state /var/lib/polylens2otel
 USER 65532:65532
