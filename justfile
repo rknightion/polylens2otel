@@ -4,7 +4,7 @@ tools_dir := justfile_directory() / ".tools"
 export PATH := tools_dir + ":" + env_var("PATH")
 
 # renovate: datasource=github-tags depName=golangci/golangci-lint
-golangci_lint_version := "v2.13.2"
+golangci_lint_version := "v2.14.0"
 # renovate: datasource=github-tags depName=golang/vuln
 govulncheck_version := "v1.8.0"
 # renovate: datasource=github-tags depName=norwoodj/helm-docs
