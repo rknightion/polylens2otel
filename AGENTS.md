@@ -77,7 +77,6 @@ Cross a seam and two packages start disagreeing about the same name.
   interchangeable.
 - **No call-quality, utilization, room, webhook or syslog subsystem exists here** - deliberate, not a
   gap to fill. Handset SIP voice quality is a separate exporter.
-- Never use a missing fixture as a reason to skip a test.
 
 <!-- BACKLOG.MD GUIDELINES START -->
 <!-- backlog.md-instructions-version: 1.50.1 -->
