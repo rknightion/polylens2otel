@@ -8,12 +8,12 @@ updated_date: '2026-08-14 16:57'
 This document carries **only what is true of polylens2otel**. The campaign model itself — run
 contract and run modes, the routing contract, authority and the thread pool, child lane briefs,
 external-contract freezing, the blocker contract, the goal-file template, the run-end protocol and
-the pre-flight checklist — is the *Agent fan-out protocol (canonical)* doc, and that doc wins on any
+the pre-flight checklist - is in `~/repos/agent-docs/sources/loop/contract.md` and `~/repos/agent-docs/sources/loop/planner.md`, which win on any
 specific. Nothing here restates it. If a section below could be pasted into another repo unchanged,
 it is in the wrong document.
 
-That protocol is harness-neutral and names lanes by **role**; its Appendix A (Codex) or Appendix B
-(Claude Code) resolves a role into a concrete route. Waves 1-3 on this repo were planned by Claude
+That protocol is harness-neutral and names lanes by **role**; its `harness-codex.md` or
+`harness-claude.md` resolves a role into a concrete route. Waves 1-3 on this repo were planned by Claude
 and executed by Codex, so **name the harness in the run contract and resolve every lane's route from
 that harness's profile** — a lane brief carrying a role name alone is not routed.
 

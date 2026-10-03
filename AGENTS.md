@@ -13,7 +13,7 @@ is marked `[confirm]`. Run `just` with stdin from `/dev/null`.
 
 ## Tracker
 
-Tasks are `plo-NNNN` in `backlog/`. Read the **Agent fan-out protocol (canonical)** doc before
+Tasks are `plo-NNNN` in `backlog/`. Read `~/repos/agent-docs/sources/loop/planner.md` before
 designing a wave, and the **Wave operating model** doc for this repo's own rules, recurring defects
 and lane conventions. The operating model wins on anything about this repo.
 
