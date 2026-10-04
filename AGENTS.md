@@ -21,19 +21,9 @@ and lane conventions. The operating model wins on anything about this repo.
 archive: the **Closed GitHub issues (pre-Backlog history record)** doc is the record itself, not an
 index into one.
 
-Tracker traps:
-
-- **Never `--notes` or `--plan` bare.** They *silently replace* the whole section and exit 0,
-  destroying another session's writes. Use `--append-notes` and `--append-plan`. A `PreToolUse` hook
-  denies the bare forms.
-- Break an HTML-comment section marker by hand-editing task markdown and the section is silently
-  dropped at exit 0. There is no repair command. `backlog/config.yml` is the one exception and is
-  edited by hand, because list-valued keys cannot be set through `backlog config set`.
-- **Finalize in one call** so an interrupted run cannot leave finished work looking unfinished:
-  `backlog task edit <id> --check-ac 1 --check-ac 2 -s Done`.
-- `backlog/` is committed and public: no credential, token, tenant/collection/policy ID, MAC address,
-  private or external IP, or internal hostname in a task or doc. Device names are the deliberate
-  exception - they already appear in tracked fixtures.
+`backlog/` is committed and public: no credential, token, tenant/collection/policy ID, MAC address,
+private or external IP, or internal hostname in a task or doc. Device names are the deliberate
+exception - they already appear in tracked fixtures.
 
 ## Ownership seams
 
