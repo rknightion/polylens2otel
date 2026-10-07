@@ -132,7 +132,7 @@ jobs:
           mkdir -p "${{ runner.temp }}/digests"
           touch "${{ runner.temp }}/digests/${BUILD_DIGEST#sha256:}"
       - name: Upload digest
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: digests-${{ matrix.pair }}
           path: ${{ runner.temp }}/digests/*
@@ -220,7 +220,7 @@ jobs:
           syft "${IMAGE}@${DIGEST}" --output spdx-json=polylens2otel.spdx.json
           syft "${IMAGE}@${DIGEST}" --output cyclonedx-json=polylens2otel.cdx.json
       - name: Retain SBOMs
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: polylens2otel-sboms
           path: polylens2otel.*.json
@@ -241,7 +241,7 @@ jobs:
           severity: CRITICAL,HIGH
       - name: Retain Trivy image SARIF
         if: always()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: trivy-image-sarif
           path: trivy-image.sarif
