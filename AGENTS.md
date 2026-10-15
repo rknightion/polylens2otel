@@ -13,9 +13,9 @@ is marked `[confirm]`. Run `just` with stdin from `/dev/null`.
 
 ## Tracker
 
-Tasks are `plo-NNNN` in `backlog/`. Read `~/repos/agent-docs/sources/loop/planner.md` before
-designing a wave, and the **Wave operating model** doc for this repo's own rules, recurring defects
-and lane conventions. The operating model wins on anything about this repo.
+Tasks are `plo-NNNN` in `backlog/`.
+
+Loops: the protocol lives in `~/repos/agent-docs/sources/loop/` (this board's "Loop protocol pointer" doc points there); this repository's loop facts are in `LOOP.md`.
 
 `#NNN` refers to a pre-migration GitHub issue. Those issues were deleted and there is no JSON
 archive: the **Closed GitHub issues (pre-Backlog history record)** doc is the record itself, not an
