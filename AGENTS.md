@@ -50,6 +50,8 @@ Cross a seam and two packages start disagreeing about the same name.
 
 ## Traps
 
+- The static runtime uses distroless Debian 13 for the patched CA bundle. Debian 12's nonroot tag still carried `ca-certificates 20250419~deb12u1` on 2026-10-21; require the patched Debian 13 package `20250419+deb13u1` or newer when refreshing this base.
+
 - The Lens **token** request body is JSON, and the bearer header is set lowercase (`authorization`);
   HTTP/2 field names are lowercase and `TestGraphQLUsesLowercaseBearerAuthorization` pins it. Do not
   switch to the canonical-cased form.
