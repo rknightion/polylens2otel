@@ -13,9 +13,9 @@ is marked `[confirm]`. Run `just` with stdin from `/dev/null`.
 
 ## Tracker
 
-Tasks are `plo-NNNN` in `backlog/`. Read `~/repos/agent-docs/sources/loop/planner.md` before
-designing a wave, and the **Wave operating model** doc for this repo's own rules, recurring defects
-and lane conventions. The operating model wins on anything about this repo.
+Tasks are `plo-NNNN` in `backlog/`.
+
+Loops: the protocol lives in `~/repos/agent-docs/sources/loop/` (this board's "Loop protocol pointer" doc points there); this repository's loop facts are in `LOOP.md`.
 
 `#NNN` refers to a pre-migration GitHub issue. Those issues were deleted and there is no JSON
 archive: the **Closed GitHub issues (pre-Backlog history record)** doc is the record itself, not an
@@ -49,6 +49,8 @@ Cross a seam and two packages start disagreeing about the same name.
   always `{service_name="polylens2otel"} | event_name=...`.
 
 ## Traps
+
+- The static runtime uses distroless Debian 13 for the patched CA bundle. Debian 12's nonroot tag still carried `ca-certificates 20250419~deb12u1` on 2026-10-21; require the patched Debian 13 package `20250419+deb13u1` or newer when refreshing this base.
 
 - The Lens **token** request body is JSON, and the bearer header is set lowercase (`authorization`);
   HTTP/2 field names are lowercase and `TestGraphQLUsesLowercaseBearerAuthorization` pins it. Do not
