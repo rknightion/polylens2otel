@@ -32,6 +32,8 @@ jobs:
       id-token: write
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Mint a scoped GitSync token
         id: bao
@@ -43,7 +45,9 @@ jobs:
           tailscale-audience: ${{ secrets.TS_WIF_AUDIENCE }}
 
       - name: Check out the GitSync repository
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        # Keeps its credentials: the commit-and-push step below needs them, and
+        # this job uploads no artifacts.
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1 # zizmor: ignore[artipacked]
         with:
           repository: m7kni/gc-gitsync-m7kni
           token: ${{ steps.bao.outputs.token }}
