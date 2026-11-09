@@ -46,6 +46,10 @@ helm lint charts/polylens2otel
 docker compose -f deploy/docker-compose.yaml config
 ```
 
+## Reporting problems
+
+Report a bug or ask for a change in the [GitHub issues](https://github.com/rknightion/polylens2otel/issues). Security reports go through [SECURITY.md](SECURITY.md).
+
 ## Licence
 
 AGPL-3.0. See [LICENSE](LICENSE).
