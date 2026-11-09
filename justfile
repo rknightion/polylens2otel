@@ -156,6 +156,21 @@ coverage:
     go test -race -coverprofile=coverage.out ./...
     go tool cover -func=coverage.out
 
+# GitHub issues and the rknightion Project; maintainers only (needs the tracker tools and credentials)
+[group('tracker')]
+[positional-arguments]
+tracker *args:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    export TRACKER_REPO=rknightion/polylens2otel TRACKER_PROJECT_OWNER=rknightion TRACKER_PROJECT=7
+    export TRACKER_ISSUE_IDENTITY=app TRACKER_PROJECT_IDENTITY=user
+    exec tracker-with-token "$@"
+
+# print the issue a legacy board id (PLO-0001) became
+[group('tracker')]
+issue id:
+    TRACKER_REPO=rknightion/polylens2otel tracker legacy {{ quote(id) }}
+
 # Remove reproducible build and tooling artifacts.
 [group('build')]
 clean:

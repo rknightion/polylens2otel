@@ -42,7 +42,8 @@ codex/
 docs/superpowers/
 
 # Claude Code repo-local config. `settings.json` and `hooks/` ARE tracked — they
-.claude/
+.claude/*
+!.claude/skills/
 
 # Local config and credentials — never commit either.
 config.local.yaml
