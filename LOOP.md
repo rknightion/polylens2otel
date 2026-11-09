@@ -5,10 +5,27 @@ ci-required: ci-success
 release-on-push: yes
 deploy-on-push: yes
 grafana-stack: robknight
+tracker: github
+landing: pr
 
 Public repository: no credential, token, tenant, collection or policy ID, MAC, private or external
-IP or internal host name in any tracked file, `backlog/` included. Run `just` with stdin from
+IP or internal host name in any tracked file, issue or pull request. Run `just` with stdin from
 `/dev/null`. There is no `ci` recipe and no confirm-gated recipe.
+
+The tracker working model is `~/repos/agent-docs/docs/github-tracker.md` (maintainers only).
+
+## Queue
+
+- The queue is `just tracker queue`: open issues at Project Status Ready on the rknightion Project.
+  Never queue the Renovate Dependency Dashboard (#20).
+- A charter selects work by labels (`type:task`, `type:bug`, `type:feature`, `needs-owner`,
+  `needs-triage`) and Project fields (Status, Priority, Effort, Lane). Never queue a `needs-owner` or
+  `needs-triage` issue.
+- Only the root writes issues and the Project, through `just tracker`. A lane returns the status and
+  the AC ticks it wants.
+- A queue row names the issue as `#N`. A legacy board id (`PLO-0001`) resolves with `just issue <ID>`;
+  `.github/tracker/id-map.json` is the map. Issue numbers from #157 on are the board's tasks and new
+  work; a bare `#N` below that in old docs is a pre-board issue that was deleted.
 
 ## Credentials
 

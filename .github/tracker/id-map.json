@@ -1,0 +1,26 @@
+{
+ "held": {},
+ "issues": {
+  "PLO-0001": {
+   "number": 159,
+   "url": "https://github.com/rknightion/polylens2otel/issues/159"
+  },
+  "PLO-0002": {
+   "number": 160,
+   "url": "https://github.com/rknightion/polylens2otel/issues/160"
+  },
+  "PLO-0003": {
+   "number": 161,
+   "url": "https://github.com/rknightion/polylens2otel/issues/161"
+  },
+  "PLO-0004": {
+   "number": 162,
+   "url": "https://github.com/rknightion/polylens2otel/issues/162"
+  }
+ },
+ "prefix": "PLO",
+ "repo": "rknightion/polylens2otel",
+ "schema": 1,
+ "source_sha": "bd0ee912977eea4a94612f9f2be0853581ebad85",
+ "synthetic": []
+}

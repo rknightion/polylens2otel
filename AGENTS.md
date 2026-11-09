@@ -11,20 +11,6 @@ is marked `[confirm]`. Run `just` with stdin from `/dev/null`.
 
 `just install-hooks` points git at the tracked `.githooks/` pre-commit gate.
 
-## Tracker
-
-Tasks are `plo-NNNN` in `backlog/`.
-
-Loops: the protocol lives in `~/repos/agent-docs/sources/loop/` (this board's "Loop protocol pointer" doc points there); this repository's loop facts are in `LOOP.md`.
-
-`#NNN` refers to a pre-migration GitHub issue. Those issues were deleted and there is no JSON
-archive: the **Closed GitHub issues (pre-Backlog history record)** doc is the record itself, not an
-index into one.
-
-`backlog/` is committed and public: no credential, token, tenant/collection/policy ID, MAC address,
-private or external IP, or internal hostname in a task or doc. Device names are the deliberate
-exception - they already appear in tracked fixtures.
-
 ## Ownership seams
 
 Cross a seam and two packages start disagreeing about the same name.
@@ -70,26 +56,22 @@ Cross a seam and two packages start disagreeing about the same name.
 - **No call-quality, utilization, room, webhook or syslog subsystem exists here** - deliberate, not a
   gap to fill. Handset SIP voice quality is a separate exporter.
 
-<!-- BACKLOG.MD GUIDELINES START -->
-<!-- backlog.md-instructions-version: 1.50.1 -->
-<CRITICAL_INSTRUCTION>
+## Tracking work
 
-## Backlog.md Workflow
+Work is tracked in this repository's GitHub issues; they are the only queue. Do not add a checklist
+file beside them.
 
-This project uses Backlog.md for task and project management.
-
-**For every user request in this project, run `backlog instructions overview` before answering or taking action.**
-
-Use the overview to decide whether to search, read, create, or update Backlog tasks.
-
-Before task lifecycle actions, read the matching detailed guide:
-- `backlog instructions task-creation` before creating or splitting tasks
-- `backlog instructions task-execution` before planning, changing status or assignee, adding a plan or implementation notes, or implementing task work
-- `backlog instructions task-finalization` before checking acceptance criteria, writing final summaries, or moving tasks to terminal statuses
-
-Use `backlog <command> --help` before running unfamiliar commands. Help shows options, fields, and examples.
-
-Do not edit Backlog task, draft, document, decision, or milestone markdown files directly. Use the `backlog` CLI so metadata, relationships, and history stay consistent.
-
-</CRITICAL_INSTRUCTION>
-<!-- BACKLOG.MD GUIDELINES END -->
+- A pull request body says how it relates to an issue, on a line of its own: `Closes #N` with the
+  `Acceptance evidence` table from `.github/pull_request_template.md` (one row for each acceptance
+  criterion of that issue), `Refs #N` when it only relates to one, or `Task: none, <reason>`.
+- A pull request that changes `.github/workflows/` or `.github/actions/` carries no closing keyword:
+  write `Task: none, <reason>`, with `Refs #N` beside it if you like.
+- Contributors never need the project board or the tracker tooling; a maintainer handles both.
+- Issues and pull requests are public: no credential, token, tenant, collection or policy ID, MAC
+  address, private or external IP or internal hostname. Device names are the deliberate exception;
+  they already appear in tracked fixtures.
+- Older commits, docs and tests cite legacy board ids such as `PLO-0001`. `just issue <ID>` prints
+  the issue each one became; `.github/tracker/id-map.json` is the map. The retired board's documents
+  are in `.github/tracker/history/`. A bare `#N` below #157 in them is a pre-board GitHub issue that
+  was deleted: the "Closed GitHub issues (pre-Backlog history record)" document there is the record
+  itself, not an index into anything.
