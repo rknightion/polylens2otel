@@ -7,7 +7,7 @@ updated_date: '2026-08-17 09:03'
 ---
 > **This is the record of the work tracked on GitHub Issues before polylens2otel moved to
 > Backlog.md on 2026-08-14. The issues were DELETED from GitHub on that date and there is no JSON
-> archive — Rob's explicit call. `gh issue view <N>` will 404 and nothing else holds their bodies,
+> archive — the owner's explicit call. `gh issue view <N>` will 404 and nothing else holds their bodies,
 > so this document is not an index into a record, it *is* the record.** Everything load-bearing that
 > was in those 49 issues and 81 comments — frozen decisions with their reasons, corrections, live
 > evidence, closing SHAs — is reproduced below. Anything not here is gone.
@@ -35,7 +35,7 @@ metrics, logs, traces and profiles to Grafana Cloud.
 
 ## Frozen product decisions — still binding
 
-These were answered by Rob before each wave and marked "do not reopen". They are the most expensive
+These were answered by the owner before each wave and marked "do not reopen". They are the most expensive
 content here to re-derive, and several are non-obvious.
 
 ### Wave 1 (#1), D1-D20
@@ -55,7 +55,7 @@ dependency in a public repo.
 **D4 Config.** koanf, precedence defaults < YAML < env. Prefix `PL2O_`, double-underscore nesting
 (`otlp.endpoint` → `PL2O_OTLP__ENDPOINT`). Secrets are **env-only, never in YAML**.
 
-**D5 Licence: AGPL-3.0.** Rob's call; graph2otel is the precedent, not the Apache-2.0 siblings.
+**D5 Licence: AGPL-3.0.** the owner's call; graph2otel is the precedent, not the Apache-2.0 siblings.
 
 **D6 Multi-tenant from day one.** `lens.tenants` optional; empty means discover via
 `{ tenants { id name } }`. `tenant.id` is stamped on **every** signal at the Emitter boundary, never
@@ -181,7 +181,7 @@ green state between units of work.
 ### Wave 2 (#31) additions
 
 1. First release is **v0.1.0**, not 1.0.0.
-2. Deployment-host compose ownership is `rob:rob`, `.env` `0600`.
+2. Deployment-host compose ownership is `the deploy user`, `.env` `0600`.
 3. `phone.auth.from_lens_policy` implemented after the gate, default **false** (wave 3 flipped it).
 4. Process telemetry emitted before tenant discovery has no `tenant.id`; the `_discovery` sentinel
    was deleted rather than faked.
@@ -213,7 +213,7 @@ ships a verified state and exists even if later lanes park.
 **D4 `1.0.0` remains forbidden.** See the *Wave operating model* doc for the two conditions and
 their current state.
 
-**D5 The deployment host follows `:main`, not a release digest** — Rob: *"<deploy-host> should follow
+**D5 The deployment host follows `:main`, not a release digest** — The owner: *"<deploy-host> should follow
 :main so it's always on dev"*. This retired wave 2's digest-pin criterion. Knowingly accepted consequence:
 a broken `main` now reaches the live service automatically.
 
@@ -334,7 +334,7 @@ published Helm.
 | #14 | L12 dashboards and alerts as code | `527a82c`, seam `1a70d67` | 29 metrics accounted for, 3 catalog-resolved alert expressions. Waivers empty; stale or blank waivers fail the gate. |
 | #15 | L13 public documentation | `46cd6ee`, gate `3e986d9` | 19 documented commands across 9 files, all verified to exist. Docs state the read-only boundary, the CN check, no scanning, no call-quality data, the deliberate syslog exclusion and the structured-metadata LogQL route. |
 | #16 | L14 integration and exact-SHA CI | `b2fb09d` | First `make check` failed lint with 22 findings (17 staticcheck capitalization, 3 gosec, bodyclose, errcheck), all fixed. Every workflow green at the exact SHA; broker mint succeeded. |
-| #17 | L15 deploy and prove Grafana Cloud data | `b81e8a6` (closed manually — external state) | Deployed from GHCR `:main`; container running, restart count 0, `.env` `0600`, state dir `65532:65532` `0750`. **Live startup exposed the three GraphQL variable-type defects** fixtures had hidden; boundary tests failed first for the right reason, then the minimal fix landed. Grafana Cloud returned both Lens devices, both phones, build info, availability=1 for all eight collectors, and the startup log. A post-deployment ownership drift (compose and `.env` had become `rob:rob`) was caught and restored in the completion audit. |
+| #17 | L15 deploy and prove Grafana Cloud data | `b81e8a6` (closed manually — external state) | Deployed from GHCR `:main`; container running, restart count 0, `.env` `0600`, state dir `65532:65532` `0750`. **Live startup exposed the three GraphQL variable-type defects** fixtures had hidden; boundary tests failed first for the right reason, then the minimal fix landed. Grafana Cloud returned both Lens devices, both phones, build info, availability=1 for all eight collectors, and the startup log. A post-deployment ownership drift (compose and `.env` had become `the deploy user`) was caught and restored in the completion audit. |
 
 **The acceptance evidence that became impossible.** Wave 1 was designed around a broken fleet — one
 handset unregistered with a factory-placeholder line, the other with its REST API wiped off. Both
@@ -400,7 +400,7 @@ and nine real call records across both devices in a sanitized Loki projection.
 | # | Title | Closed by | Substance |
 |---|---|---|---|
 | #65 | fix(phone): call-log timestamps in the phone timezone | `8dd886d` + `6539c7b` | Grafana rejected recent call records as `timestamp too new`. Phone `callLogs` rows are offset-free local wall-clock and were parsed as UTC, shifting each instant an hour forward during BST. Fixed by reading each phone's `tcpIpApp.sntp.olsonTimezoneID` through the existing read-only `config/get` and parsing in that location, failing **closed** on a missing or invalid zone rather than guessing. **Reopened after live rollout** for the second-order defect: both persisted checkpoints were still on the old basis and ~55 minutes ahead, so corrected records would have been suppressed until the stale watermark was overtaken. `6539c7b` adds the one-time versioned migration, its regression test observed suppressing the valid call before the fix. Verified live: both checkpoints migrated to version 1 at the correct offset, zero `timestamp too new` entries after restart. |
-| #67 | Grafana v2: tabbed dashboard and GitSync publication | `666a77a`, `d7f7208`, `823443c`, `ca10d89` | Replaced the legacy five-panel classic dashboard with a generated `dashboard.grafana.app/v2` resource at stable UID `polylens2otel`: seven tabs (Overview, Lens fleet, Phone REST, Calls and logs, Self-o11y, Traces, Profiles), 57 panels, eight variables, a repeated per-device row. **The stronger normalization test exposed five incorrect self-o11y backend names in the catalog** — every offline gate had agreed with itself. **Reopened** because the completing commit auto-closed the tracker before the visual acceptance loop finished: snapshots showed empty collector trace-search, TraceQL-metrics and CDR activity panels while the equivalent direct Tempo and Loki queries returned data. Two corrective commits fixed TraceQL serialization and the Loki CDR rate window; a third added an explicit healthy-uptime threshold because Grafana's implicit 80-unit threshold painted healthy uptime seconds red. Published to `rknightion/gc-gitsync-m7kni`; live readback confirmed v2, UID `polylens2otel`, folder `polylens2otel-dashboards`, generation 4. |
+| #67 | Grafana v2: tabbed dashboard and GitSync publication | `666a77a`, `d7f7208`, `823443c`, `ca10d89` | Replaced the legacy five-panel classic dashboard with a generated `dashboard.grafana.app/v2` resource at stable UID `polylens2otel`: seven tabs (Overview, Lens fleet, Phone REST, Calls and logs, Self-o11y, Traces, Profiles), 57 panels, eight variables, a repeated per-device row. **The stronger normalization test exposed five incorrect self-o11y backend names in the catalog** — every offline gate had agreed with itself. **Reopened** because the completing commit auto-closed the tracker before the visual acceptance loop finished: snapshots showed empty collector trace-search, TraceQL-metrics and CDR activity panels while the equivalent direct Tempo and Loki queries returned data. Two corrective commits fixed TraceQL serialization and the Loki CDR rate window; a third added an explicit healthy-uptime threshold because Grafana's implicit 80-unit threshold painted healthy uptime seconds red. Published to `a private Grafana GitSync repository`; live readback confirmed v2, UID `polylens2otel`, folder `polylens2otel-dashboards`, generation 4. |
 
 ## Not imported
 
