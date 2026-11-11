@@ -20,8 +20,10 @@ fail_matches() {
 # well as configuration files.
 fail_matches "private key or credential-shaped token in tracked files" \
   git grep -nEI '(BEGIN (RSA |EC |OPENSSH )?PRIVATE KEY|gh[pousr]_[A-Za-z0-9_]{20,}|github_pat_[A-Za-z0-9_]{20,}|glpat-[A-Za-z0-9_-]{20,})' -- ':!scripts/check-secret-hygiene.sh'
+# .github/privacy/ is the vended privacy sweep: it names the private ranges in
+# order to detect them.
 fail_matches "private IPv4 address in tracked files" \
-  git grep -nE '(10\.[0-9]+\.[0-9]+\.[0-9]+|192\.168\.[0-9]+\.[0-9]+|172\.(1[6-9]|2[0-9]|3[01])\.[0-9]+\.[0-9]+)' -- ':!CHANGELOG.md'
+  git grep -nE '(10\.[0-9]+\.[0-9]+\.[0-9]+|192\.168\.[0-9]+\.[0-9]+|172\.(1[6-9]|2[0-9]|3[01])\.[0-9]+\.[0-9]+)' -- ':!CHANGELOG.md' ':!.github/privacy/'
 
 # Secret-like YAML keys are allowed only when empty. Restricting this check to
 # YAML avoids false positives from Go field names and explanatory prose while
