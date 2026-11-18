@@ -111,8 +111,6 @@ jobs:
           file: Dockerfile
           push: false
           tags: polylens2otel:ci
-          # Reuse the public cache written by the main image build on matching PR runners.
-          cache-from: ${{ github.event_name == 'pull_request' && runner.os == 'Linux' && runner.arch == 'X64' && 'type=registry,ref=ghcr.io/rknightion/polylens2otel:buildcache-linux-amd64' || '' }}
           build-args: |
             VERSION=ci-${{ github.sha }}
             COMMIT=${{ github.sha }}
