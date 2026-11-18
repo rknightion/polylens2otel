@@ -1,8 +1,6 @@
 name: Lens schema canary
 
 on:
-  push:
-    branches: [main]
   pull_request:
   schedule:
     - cron: '17 5 * * *'
