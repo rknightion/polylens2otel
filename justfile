@@ -9,6 +9,7 @@ golangci_lint_version := "v2.15.0"
 govulncheck_version := "v1.9.0"
 # renovate: datasource=github-tags depName=norwoodj/helm-docs
 helm_docs_version := "v1.14.2"
+cloud_helm_version := "v4.2.2"
 
 version := `git describe --tags --always --dirty 2>/dev/null || echo dev`
 commit := `git rev-parse HEAD 2>/dev/null || echo unknown`
@@ -25,6 +26,32 @@ setup:
     test -x {{ tools_dir }}/golangci-lint || GOBIN={{ tools_dir }} go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@{{ golangci_lint_version }}
     test -x {{ tools_dir }}/govulncheck || GOBIN={{ tools_dir }} go install golang.org/x/vuln/cmd/govulncheck@{{ govulncheck_version }}
     test -x {{ tools_dir }}/helm-docs || GOBIN={{ tools_dir }} go install github.com/norwoodj/helm-docs/cmd/helm-docs@{{ helm_docs_version }}
+
+# Install the source-gate tools and warm the locked Go caches for Cursor Cloud.
+[script('bash')]
+cloud-bootstrap: setup
+    set -euo pipefail
+    scratch="$(mktemp -d)"
+    trap 'rm -rf "$scratch"' EXIT
+
+    helm="{{ tools_dir }}/helm"
+    if [[ ! -x "$helm" ]] || [[ "$("$helm" version --short)" != "{{ cloud_helm_version }}"+* ]]; then
+      case "$(go env GOARCH)" in
+        amd64) checksum=9adafecab4d406853bba163a70e9f104f47dbbf65ce24b7653bae7e36150bcb6 ;;
+        arm64) checksum=78803142087a0069fa4b50d3f32a84d3ef25c14d1ee8a40fbccf86a6216d2f36 ;;
+        *) printf '%s\n' 'Cursor Cloud Helm binaries require amd64 or arm64' >&2; exit 1 ;;
+      esac
+      platform="linux-$(go env GOARCH)"
+      archive="helm-{{ cloud_helm_version }}-$platform.tar.gz"
+      curl -qfsSL --retry 2 --max-time 120 -o "$scratch/$archive" "https://get.helm.sh/$archive"
+      (cd "$scratch" && printf '%s  %s\n' "$checksum" "$archive" | sha256sum --check)
+      tar -xzf "$scratch/$archive" -C "$scratch" "$platform/helm"
+      install -m 0755 "$scratch/$platform/helm" "$helm"
+    fi
+
+    go mod download
+    go build -mod=readonly ./...
+    go test -mod=readonly -race -c -o "$scratch/" ./...
 
 # Format Go source in place.
 [group('check')]
