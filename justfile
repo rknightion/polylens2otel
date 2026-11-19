@@ -104,6 +104,11 @@ gen-check: _configdoc-check
 [group('check')]
 check: fmt-check lint audit tidy-check gen-check test secret-hygiene doc-commands _compile-check
 
+# Verify publication and runtime health for an exact protected revision.
+[no-exit-message]
+deploy-status sha mode="current":
+    @python3 -B scripts/deploy_status.py {{ quote(sha) }} {{ quote(mode) }}
+
 # Compile the release binary to bin/polylens2otel.
 [group('build')]
 build:
