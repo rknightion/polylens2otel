@@ -19,10 +19,12 @@ import urllib.request
 REPO = "rknightion/polylens2otel"
 IMAGE = f"ghcr.io/{REPO}"
 PUBLISHER = "rknightion/.github/.github/workflows/container-publish.yml"
+EDGE_PUBLISHER_PIN = "25774fddcf21225cd249db33e61f1c3fa092da83"
 ISSUER = "https://token.actions.githubusercontent.com"
 SIGNATURE_TYPE = "https://sigstore.dev/cosign/sign/v1"
 REGISTRY = f"https://ghcr.io/v2/{REPO}"
 SHA = re.compile(r"[0-9a-f]{40}")
+PRERELEASE_TAG = re.compile(r"v[0-9]+\.[0-9]+\.[0-9]+-rc\.[0-9]+")
 DIGEST = re.compile(r"sha256:[0-9a-f]{64}")
 MEDIA = ", ".join(
     f"application/vnd.{name}"
@@ -176,6 +178,35 @@ def signer_identity(sha):
     return f"https://github.com/{PUBLISHER}@{refs[0]}"
 
 
+def edge_version(sha, identity):
+    require(identity == f"https://github.com/{PUBLISHER}@{EDGE_PUBLISHER_PIN}",
+            "the signed Edge publisher's version rules are unverified")
+    commit = github(f"/git/commits/{sha}")
+    tree_sha = commit["tree"]["sha"]
+    require(commit["sha"] == sha and SHA.fullmatch(tree_sha), "the Edge checkout commit is invalid")
+    tree = github(f"/git/trees/{tree_sha}?recursive=1")
+    entries = tree["tree"]
+    require(tree["sha"] == tree_sha and tree["truncated"] is False and isinstance(entries, list) and entries,
+            "the complete Edge checkout tree is unavailable")
+    # The pinned publisher starts at depth one with no tags or submodules.
+    # Below 2**14 objects, Git's automatic abbreviation begins at seven.
+    require(all(entry["type"] in {"blob", "tree"} and SHA.fullmatch(entry["sha"]) for entry in entries),
+            "the Edge checkout contains an unsupported object")
+    objects = {sha, tree_sha, *(entry["sha"] for entry in entries)}
+    version = sha[:7]
+    require(len(objects) < 2**14 and not any(oid != sha and oid.startswith(version) for oid in objects),
+            "the checkout does not establish a unique seven-character Edge version")
+    return version
+
+
+def tag_points_to(tag, sha):
+    ref = github(f"/git/ref/tags/{tag}")["object"]
+    if ref["type"] == "tag":
+        require(SHA.fullmatch(ref["sha"]), "release tag object is invalid")
+        ref = github(f"/git/tags/{ref['sha']}")["object"]
+    return ref["type"] == "commit" and ref["sha"] == sha
+
+
 def verify_bootstrap(sha, cutoff):
     pull = github("/pulls/174")
     require(pull["merged"] is True and pull["merge_commit_sha"] == sha
@@ -185,11 +216,23 @@ def verify_bootstrap(sha, cutoff):
     require(release["prerelease"] is True and release["draft"] is False
             and release["tag_name"] == BOOTSTRAP_TAG and utc(release["published_at"]) <= cutoff,
             "historical prerelease is missing or was published later")
-    ref = github(f"/git/ref/tags/{BOOTSTRAP_TAG}")["object"]
-    if ref["type"] == "tag":
-        require(SHA.fullmatch(ref["sha"]), "historical tag object is invalid")
-        ref = github(f"/git/tags/{ref['sha']}")["object"]
-    require(ref["type"] == "commit" and ref["sha"] == sha, "historical tag no longer binds the expected SHA")
+    require(tag_points_to(BOOTSTRAP_TAG, sha), "historical tag no longer binds the expected SHA")
+
+
+def prerelease_version(registry, sha, digest):
+    # The publisher cuts at most one RC for a SHA. The current release is near
+    # the top of this bounded read; absent evidence leaves the result unread.
+    releases = github("/releases?per_page=30")
+    matches = [release for release in releases
+               if release["prerelease"] is True and release["draft"] is False
+               and release["target_commitish"] == sha and PRERELEASE_TAG.fullmatch(release["tag_name"])]
+    require(len(matches) == 1 and utc(matches[0]["published_at"]) <= datetime.now(timezone.utc),
+            "the signed rolling image lacks one exact published prerelease")
+    tag = matches[0]["tag_name"]
+    version = tag.removeprefix("v")
+    require(tag_points_to(tag, sha) and registry.object("manifests", version)[1] == digest,
+            "the immutable prerelease tag does not bind the signed rolling image")
+    return version
 
 
 class Registry:
@@ -332,13 +375,14 @@ def sample_age(row, at):
     return age
 
 
-def live_health(config, sha, at, expected_version=None):
+def live_health(config, sha, at, expected_version, *, version_kind):
     builds = prometheus(config, "timestamp(polylens2otel_build_info{labels})", at)
     require(len(builds) == 1 and builds[0]["metric"]["commit"] == sha, "exact deployed revision is missing or overlapping")
     build = builds[0]["metric"]
-    require(build["version"] and build["service_version"] == build["version"], "runtime version labels disagree")
-    require(expected_version is None or build["version"] == expected_version,
-            "runtime does not report the historical runtime version")
+    version = build["version"]
+    require(isinstance(version, str) and version and build["service_version"] == version,
+            "runtime version labels disagree")
+    require(version == expected_version, f"runtime does not report the {version_kind}")
     age = sample_age(builds[0], at)
     metrics = ("polylens2otel_collector_availability{labels}", "timestamp(polylens2otel_collector_availability{labels})")
     values, stamps = (prometheus(config, metric, at, build["version"]) for metric in metrics)
@@ -362,7 +406,7 @@ def live_health(config, sha, at, expected_version=None):
     require(len(errors) <= 1, "HTTP error evidence is ambiguous")
     count = float(errors[0]["value"][1]) if errors else None
     require(count is None or (math.isfinite(count) and count >= 0), "HTTP error count is malformed")
-    return {"build_age_seconds": round(age, 3), "oldest_collector_age_seconds": round(oldest, 3),
+    return {"runtime_version": version, "build_age_seconds": round(age, 3), "oldest_collector_age_seconds": round(oldest, 3),
             "available_collectors": len(values), "http_5xx_increase": count}
 
 
@@ -389,13 +433,19 @@ def verify(sha, mode, config):
         publisher(sha, cutoff, rc=True)
         require(signature_matches(digest, sha, identity, "workflow_run", cutoff),
                 "no trusted image signature was verified")
+        expected_version = tag if cutoff else prerelease_version(registry, sha, digest)
+        version_kind = "historical runtime version" if cutoff else "signed prerelease version"
+    else:
+        expected_version = edge_version(sha, identity)
+        version_kind = "signed Edge version"
     at = cutoff or datetime.now(timezone.utc)
-    health = live_health(config, sha, at, tag if cutoff else None)
+    health = live_health(config, sha, at, expected_version, version_kind=version_kind)
     if not cutoff:
         require(registry.object("manifests", tag)[1] == digest and protected(sha),
                 "protected main or image tag moved during verification")
     return {"state": "verified", "mode": "historical" if cutoff else "current",
-            "revision": sha, "image_digest": digest, "observed_at": at.isoformat(), **health}
+            "revision": sha, "image_digest": digest, "image_digest_source": "registry",
+            "observed_at": at.isoformat(), **health}
 
 
 def main(args):

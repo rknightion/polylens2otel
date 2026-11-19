@@ -49,7 +49,7 @@ class DeploymentEvidence(unittest.TestCase):
         self.github = {}
         self.registry = {}
         self.labels = {"job": self.config["job"], "tenant_id": self.config["tenant_id"],
-                       "service_name": "polylens2otel", "service_version": deploy.BOOTSTRAP_TAG[1:]}
+                       "service_name": "polylens2otel", "service_version": self.revision[:7]}
         self.metric_revision = self.revision
         self.availability = 1
         self.age = 4
@@ -93,9 +93,14 @@ class DeploymentEvidence(unittest.TestCase):
                                check_suite={"id": 3}, head_sha=self.revision)
         self.github[f"/commits/{self.revision}/check-runs?filter=all&per_page=100"] = {
             "total_count": 1, "check_runs": [self.check]}
-        content = f"  uses: {deploy.PUBLISHER}@{'a' * 40} # v1\n".encode()
+        content = f"  uses: {deploy.PUBLISHER}@25774fddcf21225cd249db33e61f1c3fa092da83\n".encode()
         self.github[f"/contents/.github/workflows/publish.yml?ref={self.revision}"] = {
             "content": base64.b64encode(content).decode()}
+        tree_sha = "c" * 40
+        self.github[f"/git/commits/{self.revision}"] = {"sha": self.revision, "tree": {"sha": tree_sha}}
+        self.checkout_tree = {"sha": tree_sha, "truncated": False,
+                              "tree": [{"type": "blob", "sha": "d" * 40}, {"type": "tree", "sha": "e" * 40}]}
+        self.github[f"/git/trees/{tree_sha}?recursive=1"] = self.checkout_tree
         self.github["/pulls/174"] = {
             "merged": True, "merge_commit_sha": self.revision, "merged_at": self.original,
             "base": {"ref": "main", "repo": repo}}
@@ -177,6 +182,16 @@ class DeploymentEvidence(unittest.TestCase):
         self.assertNotIn("synthetic-deployment", sink.getvalue())
         return json.loads(sink.getvalue())
 
+    def use_runtime_version(self, version):
+        self.labels["service_version"] = version
+        self.stamp_labels["service_version"] = version
+
+    def use_signed_prerelease(self):
+        self.signature.side_effect = lambda digest, sha, identity, event, cutoff=None: event == "workflow_run"
+        release = self.github[f"/releases/tags/{deploy.BOOTSTRAP_TAG}"]
+        self.github["/releases?per_page=30"] = [{**release, "target_commitish": self.revision}]
+        self.use_runtime_version(deploy.BOOTSTRAP_TAG[1:])
+
     def test_healthy_exact_protected_deployment(self):
         result = self.run_command(0)
         self.assertEqual((result["state"], result["mode"], result["revision"], result["image_digest"],
@@ -213,6 +228,53 @@ class DeploymentEvidence(unittest.TestCase):
         self.signature.return_value = False
         self.assertIn("no trusted image signature", self.run_command(2)["reason"])
 
+    def test_current_edge_rejects_other_runtime_from_same_sha(self):
+        self.use_runtime_version(deploy.BOOTSTRAP_TAG[1:])
+        self.assertIn("signed Edge version", self.run_command(2)["reason"])
+        self.use_runtime_version(self.revision[:6])
+        self.assertIn("signed Edge version", self.run_command(2)["reason"])
+        self.use_runtime_version(self.revision[:11])
+        self.assertIn("signed Edge version", self.run_command(2)["reason"])
+        self.use_runtime_version(self.revision[:7])
+        result = self.run_command(0)
+        self.assertEqual(result["runtime_version"], self.revision[:7])
+        self.assertEqual(result["image_digest_source"], "registry")
+
+    def test_current_edge_version_requires_complete_checkout_without_collision(self):
+        self.checkout_tree["tree"].append({"type": "blob", "sha": self.revision[:7] + "f" * 33})
+        self.assertIn("unique seven-character Edge version", self.run_command(2)["reason"])
+        self.checkout_tree["tree"].pop()
+        self.checkout_tree["truncated"] = True
+        self.assertIn("complete Edge checkout", self.run_command(2)["reason"])
+
+    def test_current_prerelease_rejects_other_runtime_from_same_sha(self):
+        self.use_signed_prerelease()
+        self.use_runtime_version(self.revision[:7])
+        self.availability = 0
+        self.assertIn("signed prerelease version", self.run_command(2)["reason"])
+        self.use_runtime_version(deploy.BOOTSTRAP_TAG[1:])
+        self.availability = 1
+        self.assertEqual(self.run_command(0)["runtime_version"], deploy.BOOTSTRAP_TAG[1:])
+
+    def test_current_prerelease_rejects_moved_git_or_registry_tag(self):
+        self.use_signed_prerelease()
+        ref = self.github[f"/git/ref/tags/{deploy.BOOTSTRAP_TAG}"]["object"]
+        ref["sha"] = "b" * 40
+        self.assertIn("prerelease tag does not bind", self.run_command(2)["reason"])
+        ref["sha"] = self.revision
+        unrelated = self.registry_object("manifests", {"manifests": []})
+        self.registry[f"/manifests/{deploy.BOOTSTRAP_TAG[1:]}"] = self.registry[f"/manifests/{unrelated}"]
+        self.assertIn("prerelease tag does not bind", self.run_command(2)["reason"])
+
+    def test_current_prerelease_requires_one_published_release_receipt(self):
+        self.use_signed_prerelease()
+        list_route = "/releases?per_page=30"
+        release = self.github[list_route][0]
+        for rows in ([], [release, dict(release, tag_name="v0.0.0-rc.2")]):
+            with self.subTest(matching_receipts=len(rows)):
+                self.github[list_route] = rows
+                self.assertIn("one exact published prerelease", self.run_command(2)["reason"])
+
     def test_stale_or_wrong_observation_is_unread(self):
         self.age = 91
         self.assertIn("sample is stale", self.run_command(2)["reason"])
@@ -227,6 +289,7 @@ class DeploymentEvidence(unittest.TestCase):
     def test_historical_bootstrap_uses_only_its_own_observation(self):
         self.branch["commit"]["sha"] = "b" * 40
         self.assertIn("no longer protected main", self.run_command(2)["reason"])
+        self.use_runtime_version(deploy.BOOTSTRAP_TAG[1:])
         result = self.run_command(0, "landing")
         cutoff = deploy.utc(deploy.BOOTSTRAP_AT)
         self.assertEqual(self.observed_at, [cutoff.timestamp()] * 4)

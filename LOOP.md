@@ -43,8 +43,11 @@ existing Grafana metrics, public GitHub workflow results, and the published OCI 
 0 for verified evidence, 1 for explicit failure, or 2 when exact evidence is unavailable.
 
 Canonical landed verification uses `landing` mode to reconcile #174 from its own fixed historical
-evidence, even after a later revision deploys. Every other revision requires the live protected
-revision and current samples. The default `current` mode always checks the live revision.
+evidence, even after a later revision deploys. Every other revision requires fresh runtime samples
+whose version matches the signed Edge or prerelease publication. The Edge check needs a complete
+checkout tree and a unique seven-character version under the pinned publisher. Unavailable evidence
+returns 2. The reported digest identifies the signed registry artifact. The runtime reports its
+build version. The default `current` mode always checks the live revision.
 
 ## Traps
 
