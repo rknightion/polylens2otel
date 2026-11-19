@@ -50,8 +50,8 @@ revision and current samples. The default `current` mode always checks the live 
 
 - A push to `main` touching dashboards, alerts or `grafana/**` runs `grafana-sync`, which commits
   dashboards into the GitSync repository. Never push dashboards through the API.
-- The Lens schema canary runs on every push to `main` and on a schedule: a red canary can be
-  upstream drift, not the change.
+- The Lens schema canary runs on pull requests, on a daily schedule and on manual request.
+  A failure can come from upstream schema drift.
 - The exporter is read-only against Lens: a mutation is rejected before any network I/O, so never
   add a bypass. The bearer header stays lowercase `authorization`.
 - 4xx bodies from Lens are evidence: read them before retrying. Keep `pageSize` identical on every
