@@ -4,6 +4,7 @@ gate: just check
 ci-required: ci-success
 release-on-push: yes
 deploy-on-push: yes
+deploy-verify: just deploy-status {sha} landing
 grafana-stack: robknight
 tracker: github
 landing: pr
@@ -31,6 +32,19 @@ The tracker working model is `~/repos/agent-docs/docs/github-tracker.md` (mainta
 
 - Secrets are environment-only (`PL2O_` variables, double underscore for nesting) and never enter a
   YAML file.
+
+## Deployment readback
+
+Run `just deploy-status <protected-sha> </dev/null` with Python 3.11+, authenticated GitHub CLI,
+Cosign 3.0.6 and OpenSSL 3+. Set `PL2O_DEPLOY_VERIFY_CONFIG` to a private JSON file with
+`origin` (the HTTPS Grafana origin), `datasource_uid`, `job`, `tenant_id`, and `token_file`
+(a file holding the scoped Grafana read token). Keep both files private. The command queries
+existing Grafana metrics, public GitHub workflow results, and the published OCI image. It exits
+0 for verified evidence, 1 for explicit failure, or 2 when exact evidence is unavailable.
+
+Canonical landed verification uses `landing` mode to reconcile #174 from its own fixed historical
+evidence, even after a later revision deploys. Every other revision requires the live protected
+revision and current samples. The default `current` mode always checks the live revision.
 
 ## Traps
 
