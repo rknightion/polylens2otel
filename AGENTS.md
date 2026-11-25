@@ -92,21 +92,6 @@ is marked `[confirm]`. Run `just` with stdin from `/dev/null`.
 
 `just install-hooks` points git at the tracked `.githooks/` pre-commit gate.
 
-## Cursor Cloud specific instructions
-
-The pinned [environment](.cursor/environment.json) runs `just cloud-bootstrap`.
-It reuses `just setup`, installs Helm for the documented-command check, and
-warms the Go build and race-test caches. Temporary test binaries are removed
-after compilation.
-
-- Run `go test -race ./cmd/polylens2otel -run '^TestVersionExitsWithoutConfiguration$' </dev/null`
-  for a fast check.
-- Run `just check </dev/null` for the full source gate. Use hosted CI for
-  the image build, release snapshot, and chart checks.
-- For a local binary smoke, run `just build </dev/null` and
-  `bin/polylens2otel -version`. Live Lens and handset checks require a separate
-  environment with authorized access.
-
 ## Ownership seams
 
 Cross a seam and two packages start disagreeing about the same name.
